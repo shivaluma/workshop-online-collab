@@ -317,27 +317,27 @@ export default function HostPage({
 
       {/* Room Code Banner */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+        <div className="max-w-7xl mx-auto px-2 md:px-4 py-1.5 md:py-2 flex items-center justify-between gap-2">
+          <div className="text-xs md:text-sm text-muted-foreground truncate">
             {slideDeckData.title}
           </div>
           <button
             onClick={copyRoomCode}
-            className="flex items-center gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg px-3 py-1.5 transition-colors"
+            className="flex items-center gap-1 md:gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg px-2 md:px-3 py-1 md:py-1.5 transition-colors shrink-0"
           >
-            <span className="text-sm text-muted-foreground">Mã phòng:</span>
-            <span className="font-mono font-bold text-violet-400">{roomId}</span>
+            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">Mã phòng:</span>
+            <span className="font-mono font-bold text-xs md:text-sm text-violet-400">{roomId}</span>
             {copied ? (
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" />
             ) : (
-              <Copy className="w-4 h-4 text-muted-foreground" />
+              <Copy className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
             )}
           </button>
         </div>
       </div>
 
       {/* Main slide area */}
-      <div className="h-[calc(100vh-140px)] pt-12 overflow-hidden">
+      <div className="h-[calc(100vh-110px)] md:h-[calc(100vh-140px)] pt-10 md:pt-12 overflow-hidden">
         <SlideDeck
           slides={slideDeckData.slides}
           currentSlide={currentSlide}
