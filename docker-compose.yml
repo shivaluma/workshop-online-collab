@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: db-workshop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-workshop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workshop123}
+      POSTGRES_DB: ${POSTGRES_DB:-db_workshop}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workshop} -d ${POSTGRES_DB:-db_workshop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workshop-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: db-workshop-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-workshop}:${POSTGRES_PASSWORD:-workshop123}@postgres:5432/${POSTGRES_DB:-db_workshop}?schema=public
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:3001}
+      WS_PORT: ${WS_PORT:-3001}
+      NODE_ENV: ${NODE_ENV:-production}
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - workshop-network
+
+  # Development mode with hot reload
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: db-workshop-app-dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-workshop}:${POSTGRES_PASSWORD:-workshop123}@postgres:5432/${POSTGRES_DB:-db_workshop}?schema=public
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:3001}
+      WS_PORT: ${WS_PORT:-3001}
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - workshop-network
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+
+networks:
+  workshop-network:
+    driver: bridge
+

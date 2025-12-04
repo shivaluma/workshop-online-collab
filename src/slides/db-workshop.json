@@ -1,0 +1,485 @@
+{
+  "title": "Database Mental Model cho Frontend Developers",
+  "author": "Workshop Host",
+  "slides": [
+    {
+      "id": 0,
+      "type": "title",
+      "title": "Database Mental Model",
+      "subtitle": "dành cho Frontend Developers",
+      "description": "Hiểu DB để design API tốt hơn • Có quiz và leaderboard • Mục tiêu: hiểu tư duy, không phải SQL",
+      "emoji": "🗄️"
+    },
+    {
+      "id": 1,
+      "type": "content",
+      "title": "Vì sao FE cần hiểu Database?",
+      "emoji": "🧠",
+      "points": [
+        "70% API chậm là do Database query không tối ưu",
+        "SSR/BFF phải hiểu query để tối ưu performance",
+        "Thiết kế API shape dựa trên cấu trúc DB",
+        "Hiểu DB = ít blame Backend hơn 😄",
+        "Fullstack trend: FE cần biết cả stack"
+      ],
+      "note": "Bạn không cần viết SQL, nhưng hiểu data flow giúp build app tốt hơn"
+    },
+    {
+      "id": 2,
+      "type": "quiz",
+      "quizId": "q1",
+      "title": "🎯 Warm-up Quiz",
+      "question": "Trường hợp nào gây ra nhiều database queries nhất?",
+      "options": [
+        "Fetch 100 users trong 1 query",
+        "Fetch 1 user kèm 5 posts của họ",
+        "Fetch 100 users, rồi fetch posts của từng user riêng",
+        "Fetch tất cả posts sắp xếp theo ngày"
+      ],
+      "correctOption": 2,
+      "timeLimit": 20,
+      "explanation": "Option C tạo ra 101 queries (1 cho users + 100 cho posts từng user) - đây là N+1 problem!"
+    },
+    {
+      "id": 3,
+      "type": "content",
+      "title": "Normalization là gì?",
+      "emoji": "📊",
+      "points": [
+        {
+          "term": "Mục đích",
+          "description": "Giảm trùng lặp dữ liệu, tránh inconsistency"
+        },
+        {
+          "term": "1NF",
+          "description": "Mỗi cell chứa 1 giá trị duy nhất"
+        },
+        {
+          "term": "2NF",
+          "description": "Tách dữ liệu không phụ thuộc vào primary key"
+        },
+        {
+          "term": "3NF",
+          "description": "Loại bỏ transitive dependency"
+        }
+      ],
+      "note": "Cập nhật 1 nơi → đồng bộ mọi nơi. Không lưu cùng data ở nhiều chỗ"
+    },
+    {
+      "id": 4,
+      "type": "visual",
+      "title": "Normalized vs Denormalized",
+      "emoji": "⚖️",
+      "visualType": "comparison",
+      "left": {
+        "title": "Normalized ✅",
+        "code": "orders(id, user_id, status)\norder_items(order_id, product_id, qty)\nproducts(id, name, price)",
+        "description": "3 bảng liên kết, không trùng data"
+      },
+      "right": {
+        "title": "Denormalized ❌",
+        "code": "orders(\n  id,\n  user_name,\n  items: [{name, price}],\n  total_price\n)",
+        "description": "Lưu JSON, user_name trùng lặp"
+      }
+    },
+    {
+      "id": 5,
+      "type": "content",
+      "title": "Khi nào Denormalize?",
+      "emoji": "🚀",
+      "points": [
+        "Khi READ >> WRITE (đọc nhiều hơn ghi)",
+        "Precompute tổng tiền, số lượng comment",
+        "Caching layer (Redis, CDN)",
+        "Analytics/Reporting tables",
+        "Trade-off: Tốc độ đọc vs Consistency"
+      ],
+      "highlight": "Denormalize có chủ đích, không phải vì lười join!"
+    },
+    {
+      "id": 6,
+      "type": "quiz",
+      "quizId": "q2",
+      "title": "🎯 Quiz: Normalization",
+      "question": "Khi nào nên denormalize dữ liệu?",
+      "options": [
+        "Khi data thay đổi thường xuyên",
+        "Khi cần real-time consistency",
+        "Khi tốc độ đọc quan trọng và data ít thay đổi",
+        "Khi muốn tiết kiệm storage"
+      ],
+      "correctOption": 2,
+      "timeLimit": 15,
+      "explanation": "Denormalize đánh đổi storage và consistency lấy tốc độ đọc - phù hợp cho read-heavy, rarely-changing data"
+    },
+    {
+      "id": 7,
+      "type": "content",
+      "title": "Unique Constraint",
+      "emoji": "🔑",
+      "points": [
+        {
+          "term": "UNIQUE",
+          "description": "Không cho phép giá trị trùng (email, username)"
+        },
+        {
+          "term": "Tại sao quan trọng?",
+          "description": "Tránh duplicate accounts, duplicate orders"
+        },
+        {
+          "term": "FE cần biết",
+          "description": "Validate trước khi submit, handle error từ API"
+        }
+      ],
+      "code": "-- Email phải unique\nCREATE UNIQUE INDEX idx_email ON users(email);\n\n-- Error: duplicate key value violates unique constraint",
+      "note": "FE validate phải match với DB constraints!"
+    },
+    {
+      "id": 8,
+      "type": "content",
+      "title": "Foreign Key & Cascade",
+      "emoji": "🔗",
+      "points": [
+        {
+          "term": "FOREIGN KEY",
+          "description": "Ràng buộc quan hệ giữa các bảng"
+        },
+        {
+          "term": "ON DELETE CASCADE",
+          "description": "Xóa user → Xóa tất cả posts của user"
+        },
+        {
+          "term": "ON DELETE RESTRICT",
+          "description": "Không cho xóa nếu còn data liên quan"
+        },
+        {
+          "term": "ON DELETE SET NULL",
+          "description": "Xóa user → posts.user_id = NULL"
+        }
+      ],
+      "highlight": "Hiểu cascade để biết side effects khi delete!"
+    },
+    {
+      "id": 9,
+      "type": "visual",
+      "title": "CASCADE trong thực tế",
+      "emoji": "💥",
+      "visualType": "flow",
+      "steps": [
+        {
+          "action": "DELETE FROM users WHERE id = 1",
+          "result": "User bị xóa"
+        },
+        {
+          "action": "CASCADE → posts",
+          "result": "Tất cả posts của user bị xóa"
+        },
+        {
+          "action": "CASCADE → comments",
+          "result": "Tất cả comments trên posts đó bị xóa"
+        },
+        {
+          "action": "CASCADE → likes",
+          "result": "Tất cả likes cũng mất theo"
+        }
+      ],
+      "warning": "Một lệnh DELETE có thể xóa hàng ngàn records! Luôn hiểu rõ cascade rules."
+    },
+    {
+      "id": 10,
+      "type": "quiz",
+      "quizId": "q3",
+      "title": "🎯 Quiz: Foreign Key",
+      "question": "Foreign Key dùng để làm gì?",
+      "options": [
+        "Liên kết dữ liệu giữa các bảng",
+        "Tăng tốc query",
+        "Tự động tạo index"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15,
+      "explanation": "FK đảm bảo data integrity - không thể có post của user không tồn tại"
+    },
+    {
+      "id": 11,
+      "type": "content",
+      "title": "Index là gì?",
+      "emoji": "📚",
+      "points": [
+        "Giống như mục lục sách - tìm nhanh không cần đọc cả cuốn",
+        "Không có index → DB scan toàn bộ bảng (Full Table Scan)",
+        "Có index → Nhảy thẳng đến data cần tìm",
+        "Trade-off: Đọc nhanh hơn, Ghi chậm hơn"
+      ],
+      "code": "-- Không có index: scan 1,000,000 rows\nSELECT * FROM users WHERE email = 'test@mail.com'\n\n-- Có index: ~20 comparisons (log2 của 1M)\nCREATE INDEX idx_email ON users(email);"
+    },
+    {
+      "id": 12,
+      "type": "visual",
+      "title": "Index Performance",
+      "emoji": "⚡",
+      "visualType": "comparison",
+      "left": {
+        "title": "Không có Index",
+        "code": "WHERE user_id = 123\n\nScan: 1,000,000 rows\nTime: ~500ms",
+        "description": "Full table scan"
+      },
+      "right": {
+        "title": "Có Index",
+        "code": "WHERE user_id = 123\n\nLookup: 20 steps\nTime: ~2ms",
+        "description": "B-tree index lookup"
+      }
+    },
+    {
+      "id": 13,
+      "type": "quiz",
+      "quizId": "q4",
+      "title": "🎯 Quiz: Index",
+      "question": "Index giúp gì cho database?",
+      "options": [
+        "Tăng tốc tìm kiếm và query",
+        "Giảm dung lượng database",
+        "Tự động sửa lỗi data"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15,
+      "explanation": "Index là cấu trúc dữ liệu giúp DB tìm kiếm nhanh hơn, nhưng tốn thêm storage và chậm hơn khi write"
+    },
+    {
+      "id": 14,
+      "type": "content",
+      "title": "N+1 Query Problem",
+      "emoji": "💀",
+      "points": [
+        {
+          "term": "N+1 là gì?",
+          "description": "1 query lấy danh sách + N query lấy data liên quan"
+        },
+        {
+          "term": "Ví dụ",
+          "description": "Lấy 20 orders → 21 queries (1 + 20 cho items)"
+        },
+        {
+          "term": "Hậu quả",
+          "description": "API chậm, DB overload, user frustrated"
+        }
+      ],
+      "code": "// ❌ N+1 Problem - 101 queries!\nconst users = await db.user.findMany() // 1 query\nfor (const user of users) {\n  user.posts = await db.post.findMany({ // 100 queries!\n    where: { userId: user.id }\n  })\n}",
+      "highlight": "Pattern này có thể làm sập server chỉ với 100 users!"
+    },
+    {
+      "id": 15,
+      "type": "visual",
+      "title": "N+1 vs Optimized",
+      "emoji": "🔧",
+      "visualType": "comparison",
+      "left": {
+        "title": "N+1 (Tệ)",
+        "code": "Query 1: SELECT * FROM users\nQuery 2: SELECT * FROM posts WHERE user_id=1\nQuery 3: SELECT * FROM posts WHERE user_id=2\n...\nQuery 101: SELECT * FROM posts WHERE user_id=100",
+        "count": "101 queries 🔴"
+      },
+      "right": {
+        "title": "Optimized (Tốt)",
+        "code": "Query 1: SELECT * FROM users\nQuery 2: SELECT * FROM posts\n  WHERE user_id IN (1,2,3...100)",
+        "count": "2 queries 🟢"
+      }
+    },
+    {
+      "id": 16,
+      "type": "quiz",
+      "quizId": "q5",
+      "title": "🎯 Quiz: N+1",
+      "question": "N+1 query xảy ra khi nào?",
+      "options": [
+        "Query trong vòng lặp",
+        "Thiếu index",
+        "Bảng quá lớn"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15,
+      "explanation": "N+1 xảy ra khi query trong loop. Fix bằng eager loading, JOIN, hoặc IN clause"
+    },
+    {
+      "id": 17,
+      "type": "content",
+      "title": "Transaction",
+      "emoji": "🔒",
+      "points": [
+        {
+          "term": "Định nghĩa",
+          "description": "Nhóm operations phải thành công cùng nhau hoặc fail cùng nhau"
+        },
+        {
+          "term": "ACID",
+          "description": "Atomic, Consistent, Isolated, Durable"
+        },
+        {
+          "term": "Use case",
+          "description": "Chuyển tiền, đặt hàng, thanh toán"
+        }
+      ],
+      "code": "// ✅ Transaction: cả 2 thành công hoặc cả 2 fail\nawait db.$transaction([\n  db.account.update({ // Trừ 100k\n    where: { id: 'A' },\n    data: { balance: { decrement: 100000 }}\n  }),\n  db.account.update({ // Cộng 100k\n    where: { id: 'B' },\n    data: { balance: { increment: 100000 }}\n  })\n])"
+    },
+    {
+      "id": 18,
+      "type": "quiz",
+      "quizId": "q6",
+      "title": "🎯 Quiz: Transaction",
+      "question": "Transaction đảm bảo điều gì?",
+      "options": [
+        "Atomicity - tất cả thành công hoặc tất cả rollback",
+        "Indexing - tăng tốc query",
+        "Caching - lưu tạm data"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15,
+      "explanation": "Transaction đảm bảo data consistency - không có trạng thái trung gian"
+    },
+    {
+      "id": 19,
+      "type": "content",
+      "title": "Anti-patterns cần tránh",
+      "emoji": "🚫",
+      "points": [
+        {
+          "term": "SELECT *",
+          "description": "Lấy dư data, chậm và tốn bandwidth"
+        },
+        {
+          "term": "LIKE '%abc%'",
+          "description": "Không dùng được index, scan toàn bảng"
+        },
+        {
+          "term": "Không pagination",
+          "description": "SELECT * trên 1M rows = 💥"
+        },
+        {
+          "term": "Lưu JSON blob",
+          "description": "Không query, index, validate được"
+        },
+        {
+          "term": "Soft delete everywhere",
+          "description": "Mọi query đều cần WHERE deleted_at IS NULL"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "quiz",
+      "quizId": "q7",
+      "title": "🎯 Quiz: Anti-pattern",
+      "question": "LIKE '%abc%' gây vấn đề gì?",
+      "options": [
+        "Không dùng được index, query cực chậm",
+        "Sai dữ liệu trả về",
+        "Lỗi cú pháp SQL"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15,
+      "explanation": "Wildcard ở đầu (%) khiến DB không thể dùng index, phải scan toàn bộ bảng"
+    },
+    {
+      "id": 21,
+      "type": "summary",
+      "title": "Tổng kết",
+      "emoji": "📝",
+      "points": [
+        "🎯 Hiểu access patterns trước khi thiết kế",
+        "⚖️ Normalize vs Denormalize dựa trên read/write ratio",
+        "🛡️ Dùng constraints để bảo vệ data integrity",
+        "📚 Index các columns hay filter và sort",
+        "💀 Tránh N+1 - dùng eager loading",
+        "🔒 Dùng transaction cho multi-step operations",
+        "🚫 Tránh SELECT *, LIKE '%...%', no pagination"
+      ]
+    },
+    {
+      "id": 22,
+      "type": "leaderboard",
+      "title": "🏆 Final Leaderboard",
+      "emoji": "🏆",
+      "description": "Chúc mừng những Database Champions!"
+    }
+  ],
+  "quizzes": [
+    {
+      "slideId": 2,
+      "question": "Trường hợp nào gây ra nhiều database queries nhất?",
+      "options": [
+        "Fetch 100 users trong 1 query",
+        "Fetch 1 user kèm 5 posts của họ",
+        "Fetch 100 users, rồi fetch posts của từng user riêng",
+        "Fetch tất cả posts sắp xếp theo ngày"
+      ],
+      "correctOption": 2,
+      "timeLimit": 20
+    },
+    {
+      "slideId": 6,
+      "question": "Khi nào nên denormalize dữ liệu?",
+      "options": [
+        "Khi data thay đổi thường xuyên",
+        "Khi cần real-time consistency",
+        "Khi tốc độ đọc quan trọng và data ít thay đổi",
+        "Khi muốn tiết kiệm storage"
+      ],
+      "correctOption": 2,
+      "timeLimit": 15
+    },
+    {
+      "slideId": 10,
+      "question": "Foreign Key dùng để làm gì?",
+      "options": [
+        "Liên kết dữ liệu giữa các bảng",
+        "Tăng tốc query",
+        "Tự động tạo index"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15
+    },
+    {
+      "slideId": 13,
+      "question": "Index giúp gì cho database?",
+      "options": [
+        "Tăng tốc tìm kiếm và query",
+        "Giảm dung lượng database",
+        "Tự động sửa lỗi data"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15
+    },
+    {
+      "slideId": 16,
+      "question": "N+1 query xảy ra khi nào?",
+      "options": [
+        "Query trong vòng lặp",
+        "Thiếu index",
+        "Bảng quá lớn"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15
+    },
+    {
+      "slideId": 18,
+      "question": "Transaction đảm bảo điều gì?",
+      "options": [
+        "Atomicity - tất cả thành công hoặc tất cả rollback",
+        "Indexing - tăng tốc query",
+        "Caching - lưu tạm data"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15
+    },
+    {
+      "slideId": 20,
+      "question": "LIKE '%abc%' gây vấn đề gì?",
+      "options": [
+        "Không dùng được index, query cực chậm",
+        "Sai dữ liệu trả về",
+        "Lỗi cú pháp SQL"
+      ],
+      "correctOption": 0,
+      "timeLimit": 15
+    }
+  ]
+}

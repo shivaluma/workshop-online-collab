@@ -1,0 +1,21 @@
+# Development Dockerfile with hot reload
+FROM node:22-alpine
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install
+
+# Copy prisma schema for initial generation
+COPY prisma ./prisma
+RUN pnpm prisma generate
+
+EXPOSE 3000 3001
+
+# Start development server with WebSocket
+CMD ["pnpm", "dev:all"]

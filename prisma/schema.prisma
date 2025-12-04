@@ -1,0 +1,88 @@
+// Prisma schema for Workshop Platform
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id           String        @id @default(cuid())
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  currentSlide Int           @default(0) @map("current_slide")
+  status       RoomStatus    @default(WAITING)
+  hostSecret   String        @unique @map("host_secret") @default(cuid())
+  slidePreset  String?       @map("slide_preset") // preset ID like "db-workshop", "system-design-101"
+  customSlides Json?         @map("custom_slides") // custom uploaded slides JSON
+  participants Participant[]
+  quizzes      Quiz[]
+
+  @@map("rooms")
+}
+
+model Participant {
+  id       String   @id @default(cuid())
+  roomId   String   @map("room_id")
+  name     String
+  score    Int      @default(0)
+  joinedAt DateTime @default(now()) @map("joined_at")
+  isActive Boolean  @default(true) @map("is_active")
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  answers  Answer[]
+
+  @@unique([roomId, name])
+  @@index([roomId])
+  @@map("participants")
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  roomId        String   @map("room_id")
+  slideId       Int      @map("slide_id")
+  question      String
+  options       String[] // Array of options
+  correctOption Int      @map("correct_option")
+  timeLimit     Int      @default(20) @map("time_limit") // seconds
+  status        QuizStatus @default(PENDING)
+  startedAt     DateTime? @map("started_at")
+  endedAt       DateTime? @map("ended_at")
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+
+  @@index([roomId])
+  @@map("quizzes")
+}
+
+model Answer {
+  id            String      @id @default(cuid())
+  participantId String      @map("participant_id")
+  quizId        String      @map("quiz_id")
+  answer        Int         // Index of selected option
+  isCorrect     Boolean     @map("is_correct")
+  timeTaken     Int         @map("time_taken") // milliseconds
+  points        Int         @default(0)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  quiz          Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, quizId])
+  @@index([quizId])
+  @@map("answers")
+}
+
+enum RoomStatus {
+  WAITING
+  ACTIVE
+  QUIZ_ACTIVE
+  FINISHED
+}
+
+enum QuizStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+}
+

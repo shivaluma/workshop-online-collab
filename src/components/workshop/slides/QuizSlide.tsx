@@ -1,0 +1,333 @@
+"use client";
+
+import { CheckCircle2, Clock, XCircle, Zap } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import type { QuizSlide as QuizSlideType } from "@/lib/slides/types";
+import { cn } from "@/lib/utils";
+import type { QuizStats } from "@/lib/ws/types";
+import { Timer } from "../Timer";
+
+interface QuizSlideProps {
+  slide: QuizSlideType;
+  isHost?: boolean;
+  activeQuizId?: string | null;
+  quizQuestion?: string;
+  quizOptions?: string[];
+  quizTimeout?: number;
+  quizStartTime?: number;
+  onSubmitAnswer?: (answer: number, timeTaken: number) => void;
+  hasAnswered?: boolean;
+  answeredOption?: number;
+  answerCount?: { count: number; total: number };
+  quizResult?: { correct: number; stats: QuizStats } | null;
+}
+
+const optionColors = [
+  "from-rose-500 to-pink-600",
+  "from-blue-500 to-cyan-600",
+  "from-amber-500 to-orange-600",
+  "from-emerald-500 to-teal-600",
+];
+
+const optionBgColors = [
+  "bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20",
+  "bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20",
+  "bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20",
+  "bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20",
+];
+
+export function QuizSlide({
+  slide,
+  isHost = false,
+  activeQuizId,
+  quizQuestion,
+  quizOptions,
+  quizTimeout = 20,
+  quizStartTime,
+  onSubmitAnswer,
+  hasAnswered,
+  answeredOption,
+  answerCount,
+  quizResult,
+}: QuizSlideProps) {
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(quizTimeout);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isQuizActive = activeQuizId != null && !quizResult;
+  const showResults = quizResult != null;
+
+  // Timer countdown
+  useEffect(() => {
+    if (!isQuizActive || !quizStartTime || isHost || hasAnswered) return;
+
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - quizStartTime) / 1000;
+      const remaining = Math.max(0, quizTimeout - elapsed);
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [isQuizActive, quizStartTime, quizTimeout, isHost, hasAnswered]);
+
+  // Reset when quiz changes - we want this to trigger on new quiz, not on timeout changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we only want this to trigger on new quiz
+    useEffect(() => {
+    setSelectedAnswer(null);
+    setTimeRemaining(quizTimeout);
+    setIsSubmitting(false);
+  }, [activeQuizId, quizTimeout]); // Intentionally only depend on activeQuizId
+
+  const handleSelectAnswer = useCallback(
+    (index: number) => {
+      if (hasAnswered || isSubmitting || !isQuizActive || isHost) return;
+
+      setSelectedAnswer(index);
+      setIsSubmitting(true);
+
+      const timeTaken = quizStartTime ? Date.now() - quizStartTime : 0;
+      onSubmitAnswer?.(index, timeTaken);
+    },
+    [
+      hasAnswered,
+      isSubmitting,
+      isQuizActive,
+      isHost,
+      quizStartTime,
+      onSubmitAnswer,
+    ],
+  );
+
+  // Waiting for quiz to start
+  if (!isQuizActive && !showResults) {
+    return (
+      <div className="w-full max-w-4xl space-y-8 text-center">
+        <div className="flex items-center justify-center gap-4">
+          {slide.emoji && <span className="text-5xl">{slide.emoji}</span>}
+          <h2 className="text-4xl md:text-5xl font-bold">{slide.title}</h2>
+        </div>
+        <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-8">
+          <div className="text-2xl text-muted-foreground">
+            {isHost
+              ? "Sẵn sàng bắt đầu quiz!"
+              : "Đang chờ host bắt đầu quiz..."}
+          </div>
+          <div className="mt-4 text-lg text-violet-400">
+            ⏱️ {slide.timeLimit} giây để trả lời
+          </div>
+          <div className="mt-2 text-sm text-muted-foreground">
+            💡 Điểm tối đa: 1000 • Giảm dần theo thời gian
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show results
+  if (showResults && quizResult) {
+    const { correct, stats } = quizResult;
+    const options = quizOptions || slide.options;
+    const isCorrect = answeredOption === correct;
+
+    return (
+      <div className="w-full max-w-4xl space-y-8">
+        <div className="flex items-center justify-center gap-4">
+          <span className="text-5xl">{isCorrect ? "🎉" : "😅"}</span>
+          <h2 className="text-4xl font-bold">
+            {isHost ? "Kết quả Quiz" : isCorrect ? "Chính xác!" : "Chưa đúng!"}
+          </h2>
+        </div>
+
+        <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-6 space-y-6">
+          <div className="text-xl text-center text-muted-foreground">
+            {quizQuestion || slide.question}
+          </div>
+
+          {/* Options with results */}
+          <div className="grid gap-3">
+            {options.map((option, idx) => {
+              const percentage =
+                stats.totalAnswers > 0
+                  ? Math.round(
+                      (stats.optionCounts[idx] / stats.totalAnswers) * 100,
+                    )
+                  : 0;
+              const isCorrectOption = idx === correct;
+              const wasSelected = idx === answeredOption;
+
+              const optionKey = `result-${activeQuizId || "quiz"}-${idx}`;
+              return (
+                <div
+                  key={optionKey}
+                  className={cn(
+                    "relative overflow-hidden rounded-xl border p-4",
+                    isCorrectOption
+                      ? "border-emerald-500 bg-emerald-500/10"
+                      : wasSelected
+                        ? "border-rose-500 bg-rose-500/10"
+                        : "border-zinc-700 bg-zinc-800/30",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute inset-y-0 left-0 transition-all duration-1000",
+                      isCorrectOption ? "bg-emerald-500/20" : "bg-zinc-700/30",
+                    )}
+                    style={{ width: `${percentage}%` }}
+                  />
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {isCorrectOption && (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      )}
+                      {wasSelected && !isCorrectOption && (
+                        <XCircle className="w-5 h-5 text-rose-400" />
+                      )}
+                      <span className="text-lg">{option}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">
+                        {stats.optionCounts[idx]}
+                      </span>
+                      <span className="font-bold">{percentage}%</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-zinc-700">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-violet-400">
+                  {stats.totalAnswers}
+                </div>
+                <div className="text-sm text-muted-foreground">Số câu trả lời</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-emerald-400">
+                  {stats.totalAnswers > 0
+                    ? Math.round((stats.correctCount / stats.totalAnswers) * 100)
+                    : 0}
+                  %
+                </div>
+                <div className="text-sm text-muted-foreground">Trả lời đúng</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-400">
+                  {(stats.fastestTime / 1000).toFixed(1)}s
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Nhanh nhất
+                  {stats.fastestParticipant && ` (${stats.fastestParticipant})`}
+                </div>
+              </div>
+            </div>
+
+          {/* Explanation */}
+          {slide.explanation && (
+            <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-4 text-violet-200">
+              💡 {slide.explanation}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Active quiz
+  const options = quizOptions || slide.options;
+  const question = quizQuestion || slide.question;
+
+  return (
+    <div className="w-full max-w-4xl space-y-8">
+      {/* Timer */}
+      {!isHost && (
+        <Timer
+          timeRemaining={timeRemaining}
+          totalTime={quizTimeout}
+          isActive={isQuizActive && !hasAnswered}
+        />
+      )}
+
+      {/* Question */}
+      <div className="text-center space-y-4">
+        <h2 className="text-3xl md:text-4xl font-bold">{question}</h2>
+        {isHost && answerCount && (
+          <div className="flex items-center justify-center gap-4">
+            <Progress
+              value={(answerCount.count / answerCount.total) * 100}
+              className="w-64 h-3"
+            />
+            <span className="text-lg text-muted-foreground">
+              {answerCount.count} / {answerCount.total} answered
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Options */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {options.map((option, idx) => {
+          const isSelected = selectedAnswer === idx || answeredOption === idx;
+          const isDisabled = hasAnswered || isSubmitting || isHost;
+
+          const buttonKey = `active-${activeQuizId || "quiz"}-${idx}`;
+          return (
+            <button
+              type="button"
+              key={buttonKey}
+              onClick={() => handleSelectAnswer(idx)}
+              disabled={isDisabled}
+              className={cn(
+                "relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 border-2",
+                isSelected ? "ring-4 ring-white/30 scale-[1.02]" : "",
+                isDisabled && !isSelected
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-[1.02] cursor-pointer",
+                optionBgColors[idx],
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl font-bold text-white shrink-0",
+                    optionColors[idx],
+                  )}
+                >
+                  {String.fromCharCode(65 + idx)}
+                </div>
+                <span className="text-xl font-medium">{option}</span>
+              </div>
+              {isSelected && hasAnswered && (
+                <div className="absolute top-2 right-2">
+                  <div className="bg-white/20 rounded-full p-1">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Answered confirmation */}
+      {hasAnswered && !showResults && (
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-6 py-3">
+            <Zap className="w-5 h-5 text-emerald-400" />
+            <span className="text-emerald-300">
+              Đã gửi câu trả lời! Đang chờ kết quả...
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
