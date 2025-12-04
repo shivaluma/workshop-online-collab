@@ -50,7 +50,7 @@
     {
       "id": 5,
       "type": "article",
-      "title": "Job Queue: Giải thích cho Junior",
+      "title": "Job Queue: Hiểu đơn giản",
       "emoji": "🎓",
       "content": "### Hiểu đơn giản:\n\n| Thành phần | Vai trò | Ví dụ đời thường |\n|------------|---------|------------------|\n| **API** | Làm việc nhanh | Nhân viên tiếp tân |\n| **Worker** | Làm việc chậm | Nhân viên kho |\n| **Queue** | Danh sách chờ | Hàng đợi đơn hàng |\n\n### So sánh: Không queue vs Có queue\n\n```mermaid\nsequenceDiagram\n    participant U as 👤 User\n    participant A as 🖥️ API\n    participant W as ⚙️ Worker\n    \n    Note over U,W: ❌ Không có Queue (30 giây chờ)\n    U->>A: Upload ảnh 5MB\n    A->>A: Resize... (30s)\n    A-->>U: \"Upload xong!\"\n    \n    Note over U,W: ✅ Có Queue (100ms)\n    U->>A: Upload ảnh 5MB\n    A->>W: Gửi job vào queue\n    A-->>U: \"Upload OK!\" (ngay lập tức)\n    W->>W: Resize trong nền\n```\n\n**User không cần chờ!** 🎉"
     },
@@ -75,7 +75,7 @@
       "type": "article",
       "title": "Job Queue: Retry & Dead Letter",
       "emoji": "🔄",
-      "content": "### Điều Junior cần biết:\n\n#### 1. Job có thể FAIL → Retry\n\n```mermaid\nflowchart LR\n    J[\"📋 Job\"] --> W[\"⚙️ Worker\"]\n    W -->|\"❌ Fail\"| R[\"🔄 Retry\"]\n    R -->|\"Lần 1-4\"| W\n    R -->|\"Lần 5 fail\"| D[\"💀 Dead Letter Queue\"]\n    W -->|\"✅ Success\"| S[\"✓ Done\"]\n```\n\n#### 2. Dead Letter Queue (DLQ)\n\nJob fail quá nhiều → Chuyển vào **DLQ** để:\n- Tránh làm nghẽn queue chính\n- Admin có thể review và xử lý sau\n\n#### 3. Queue Technologies:\n\n| Tech | Đặc điểm |\n|------|----------|\n| **Redis** | Phổ biến nhất, đơn giản |\n| **RabbitMQ** | Nhiều features |\n| **Kafka** | High throughput |\n| **Database** | Simple setup |"
+      "content": "### Điều cần biết:\n\n#### 1. Job có thể FAIL → Retry\n\n```mermaid\nflowchart LR\n    J[\"📋 Job\"] --> W[\"⚙️ Worker\"]\n    W -->|\"❌ Fail\"| R[\"🔄 Retry\"]\n    R -->|\"Lần 1-4\"| W\n    R -->|\"Lần 5 fail\"| D[\"💀 Dead Letter Queue\"]\n    W -->|\"✅ Success\"| S[\"✓ Done\"]\n```\n\n#### 2. Dead Letter Queue (DLQ)\n\nJob fail quá nhiều → Chuyển vào **DLQ** để:\n- Tránh làm nghẽn queue chính\n- Admin có thể review và xử lý sau\n\n#### 3. Queue Technologies:\n\n| Tech | Đặc điểm |\n|------|----------|\n| **Redis** | Phổ biến nhất, đơn giản |\n| **RabbitMQ** | Nhiều features |\n| **Kafka** | High throughput |\n| **Database** | Simple setup |"
     },
     {
       "id": 8,
@@ -255,7 +255,7 @@
       "type": "article",
       "title": "Phase 6: Cache Problems",
       "emoji": "⚠️",
-      "content": "### Vấn đề Junior hay gặp:\n\n#### 1. Cache Invalidation\n\n> *\"There are only two hard things in CS: cache invalidation and naming things.\"*\n\n**Khi data thay đổi, cache cũ vẫn còn!**\n\n```javascript\n// User update profile\nawait db.user.update(data);\nawait redis.del(`user:${id}`); // ← Quan trọng!\n```\n\n#### 2. Thundering Herd\n\nCache expire → 1000 requests đồng thời query DB!\n\n**Giải pháp:**\n- Lock khi rebuild cache\n- Stagger expiration times\n- Background refresh\n\n#### 3. Cold Start\n\nServer mới = cache trống = DB bị đập!\n\n**Giải pháp:**\n- Warm up cache trước khi nhận traffic\n- Dùng cache cluster (Redis Cluster)"
+      "content": "### Vấn đề thường gặp:\n\n#### 1. Cache Invalidation\n\n> *\"There are only two hard things in CS: cache invalidation and naming things.\"*\n\n**Khi data thay đổi, cache cũ vẫn còn!**\n\n```javascript\n// User update profile\nawait db.user.update(data);\nawait redis.del(`user:${id}`); // ← Quan trọng!\n```\n\n#### 2. Thundering Herd\n\nCache expire → 1000 requests đồng thời query DB!\n\n**Giải pháp:**\n- Lock khi rebuild cache\n- Stagger expiration times\n- Background refresh\n\n#### 3. Cold Start\n\nServer mới = cache trống = DB bị đập!\n\n**Giải pháp:**\n- Warm up cache trước khi nhận traffic\n- Dùng cache cluster (Redis Cluster)"
     },
     {
       "id": 26,
@@ -331,7 +331,7 @@
       "type": "article",
       "title": "Phase 8: Replication Lag",
       "emoji": "⏱️",
-      "content": "### Vấn đề Junior hay gặp: Replication Lag\n\n```\n1. User update name = \"John\" → Leader\n2. Leader replicate → Followers (mất 100ms)\n3. User refresh ngay → Read từ Follower\n4. Follower chưa có data mới → Hiện tên cũ!\n```\n\n### Giải pháp:\n\n| Approach | Mô tả |\n|----------|-------|\n| **Read-your-writes** | Sau khi write, read từ Leader |\n| **Sticky session** | User luôn đọc từ 1 replica |\n| **Sync replication** | Chờ replicate xong mới return |\n\n### Pricing (DigitalOcean):\n\n| Setup | Cost/month |\n|-------|------------|\n| 1 DB node | $15 |\n| 3 nodes cluster | $60 |\n| Managed failover | Included |\n\n> *Với $60/month có **3 nodes + auto failover**!*"
+      "content": "### Vấn đề thường gặp: Replication Lag\n\n```\n1. User update name = \"John\" → Leader\n2. Leader replicate → Followers (mất 100ms)\n3. User refresh ngay → Read từ Follower\n4. Follower chưa có data mới → Hiện tên cũ!\n```\n\n### Giải pháp:\n\n| Approach | Mô tả |\n|----------|-------|\n| **Read-your-writes** | Sau khi write, read từ Leader |\n| **Sticky session** | User luôn đọc từ 1 replica |\n| **Sync replication** | Chờ replicate xong mới return |\n\n### Pricing (DigitalOcean):\n\n| Setup | Cost/month |\n|-------|------------|\n| 1 DB node | $15 |\n| 3 nodes cluster | $60 |\n| Managed failover | Included |\n\n> *Với $60/month có **3 nodes + auto failover**!*"
     },
     {
       "id": 33,
