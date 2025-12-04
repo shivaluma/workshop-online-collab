@@ -93,7 +93,7 @@ export function Slide({
   return (
     <div
       className={cn(
-        "w-full h-full flex items-center justify-center p-8 animate-in fade-in slide-in-from-right-4 duration-500",
+        "w-full h-full flex items-center justify-center p-4 md:p-8 animate-in fade-in slide-in-from-right-4 duration-500",
         className,
       )}
     >

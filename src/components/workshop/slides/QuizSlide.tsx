@@ -106,21 +106,21 @@ export function QuizSlide({
   // Waiting for quiz to start
   if (!isQuizActive && !showResults) {
     return (
-      <div className="w-full max-w-4xl space-y-8 text-center">
-        <div className="flex items-center justify-center gap-4">
-          {slide.emoji && <span className="text-5xl">{slide.emoji}</span>}
-          <h2 className="text-4xl md:text-5xl font-bold">{slide.title}</h2>
+      <div className="w-full max-w-4xl space-y-4 md:space-y-8 text-center px-2">
+        <div className="flex items-center justify-center gap-2 md:gap-4">
+          {slide.emoji && <span className="text-3xl md:text-5xl">{slide.emoji}</span>}
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold">{slide.title}</h2>
         </div>
-        <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-8">
-          <div className="text-2xl text-muted-foreground">
+        <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl md:rounded-2xl p-4 md:p-8">
+          <div className="text-lg md:text-2xl text-muted-foreground">
             {isHost
               ? "Sẵn sàng bắt đầu quiz!"
               : "Đang chờ host bắt đầu quiz..."}
           </div>
-          <div className="mt-4 text-lg text-violet-400">
+          <div className="mt-3 md:mt-4 text-base md:text-lg text-violet-400">
             ⏱️ {slide.timeLimit} giây để trả lời
           </div>
-          <div className="mt-2 text-sm text-muted-foreground">
+          <div className="mt-2 text-xs md:text-sm text-muted-foreground">
             💡 Điểm tối đa: 1000 • Giảm dần theo thời gian
           </div>
         </div>
@@ -135,21 +135,21 @@ export function QuizSlide({
     const isCorrect = answeredOption === correct;
 
     return (
-      <div className="w-full max-w-4xl space-y-8">
-        <div className="flex items-center justify-center gap-4">
-          <span className="text-5xl">{isCorrect ? "🎉" : "😅"}</span>
-          <h2 className="text-4xl font-bold">
+      <div className="w-full max-w-4xl space-y-4 md:space-y-8 px-2 overflow-y-auto max-h-[calc(100vh-120px)]">
+        <div className="flex items-center justify-center gap-2 md:gap-4">
+          <span className="text-3xl md:text-5xl">{isCorrect ? "🎉" : "😅"}</span>
+          <h2 className="text-2xl md:text-4xl font-bold">
             {isHost ? "Kết quả Quiz" : isCorrect ? "Chính xác!" : "Chưa đúng!"}
           </h2>
         </div>
 
-        <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-6 space-y-6">
-          <div className="text-xl text-center text-muted-foreground">
+        <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl md:rounded-2xl p-3 md:p-6 space-y-4 md:space-y-6">
+          <div className="text-base md:text-xl text-center text-muted-foreground">
             {quizQuestion || slide.question}
           </div>
 
           {/* Options with results */}
-          <div className="grid gap-3">
+          <div className="grid gap-2 md:gap-3">
             {options.map((option, idx) => {
               const percentage =
                 stats.totalAnswers > 0
@@ -165,7 +165,7 @@ export function QuizSlide({
                 <div
                   key={optionKey}
                   className={cn(
-                    "relative overflow-hidden rounded-xl border p-4",
+                    "relative overflow-hidden rounded-lg md:rounded-xl border p-3 md:p-4",
                     isCorrectOption
                       ? "border-emerald-500 bg-emerald-500/10"
                       : wasSelected
@@ -180,21 +180,21 @@ export function QuizSlide({
                     )}
                     style={{ width: `${percentage}%` }}
                   />
-                  <div className="relative flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="relative flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0">
                       {isCorrectOption && (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-400 shrink-0" />
                       )}
                       {wasSelected && !isCorrectOption && (
-                        <XCircle className="w-5 h-5 text-rose-400" />
+                        <XCircle className="w-4 h-4 md:w-5 md:h-5 text-rose-400 shrink-0" />
                       )}
-                      <span className="text-lg">{option}</span>
+                      <span className="text-sm md:text-lg truncate">{option}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">
+                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                      <span className="text-xs md:text-base text-muted-foreground">
                         {stats.optionCounts[idx]}
                       </span>
-                      <span className="font-bold">{percentage}%</span>
+                      <span className="font-bold text-sm md:text-base">{percentage}%</span>
                     </div>
                   </div>
                 </div>
@@ -203,36 +203,34 @@ export function QuizSlide({
           </div>
 
           {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-zinc-700">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-violet-400">
-                  {stats.totalAnswers}
-                </div>
-                <div className="text-sm text-muted-foreground">Số câu trả lời</div>
+          <div className="grid grid-cols-3 gap-2 md:gap-4 pt-3 md:pt-4 border-t border-zinc-700">
+            <div className="text-center">
+              <div className="text-xl md:text-3xl font-bold text-violet-400">
+                {stats.totalAnswers}
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-emerald-400">
-                  {stats.totalAnswers > 0
-                    ? Math.round((stats.correctCount / stats.totalAnswers) * 100)
-                    : 0}
-                  %
-                </div>
-                <div className="text-sm text-muted-foreground">Trả lời đúng</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Trả lời</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl md:text-3xl font-bold text-emerald-400">
+                {stats.totalAnswers > 0
+                  ? Math.round((stats.correctCount / stats.totalAnswers) * 100)
+                  : 0}%
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-amber-400">
-                  {(stats.fastestTime / 1000).toFixed(1)}s
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Nhanh nhất
-                  {stats.fastestParticipant && ` (${stats.fastestParticipant})`}
-                </div>
+              <div className="text-xs md:text-sm text-muted-foreground">Đúng</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl md:text-3xl font-bold text-amber-400">
+                {(stats.fastestTime / 1000).toFixed(1)}s
+              </div>
+              <div className="text-xs md:text-sm text-muted-foreground truncate">
+                {stats.fastestParticipant || "Nhanh nhất"}
               </div>
             </div>
+          </div>
 
           {/* Explanation */}
           {slide.explanation && (
-            <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-4 text-violet-200">
+            <div className="bg-violet-500/10 border border-violet-500/30 rounded-lg md:rounded-xl p-3 md:p-4 text-sm md:text-base text-violet-200">
               💡 {slide.explanation}
             </div>
           )}
@@ -246,7 +244,7 @@ export function QuizSlide({
   const question = quizQuestion || slide.question;
 
   return (
-    <div className="w-full max-w-4xl space-y-8">
+    <div className="w-full max-w-4xl space-y-4 md:space-y-8 px-2">
       {/* Timer */}
       {!isHost && (
         <Timer
@@ -257,23 +255,23 @@ export function QuizSlide({
       )}
 
       {/* Question */}
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl md:text-4xl font-bold">{question}</h2>
+      <div className="text-center space-y-3 md:space-y-4">
+        <h2 className="text-xl sm:text-2xl md:text-4xl font-bold leading-tight">{question}</h2>
         {isHost && answerCount && (
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-2 md:gap-4">
             <Progress
               value={(answerCount.count / answerCount.total) * 100}
-              className="w-64 h-3"
+              className="w-32 md:w-64 h-2 md:h-3"
             />
-            <span className="text-lg text-muted-foreground">
-              {answerCount.count} / {answerCount.total} answered
+            <span className="text-sm md:text-lg text-muted-foreground">
+              {answerCount.count}/{answerCount.total}
             </span>
           </div>
         )}
       </div>
 
       {/* Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
         {options.map((option, idx) => {
           const isSelected = selectedAnswer === idx || answeredOption === idx;
           const isDisabled = hasAnswered || isSubmitting || isHost;
@@ -286,29 +284,29 @@ export function QuizSlide({
               onClick={() => handleSelectAnswer(idx)}
               disabled={isDisabled}
               className={cn(
-                "relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 border-2",
-                isSelected ? "ring-4 ring-white/30 scale-[1.02]" : "",
+                "relative overflow-hidden rounded-xl md:rounded-2xl p-3 md:p-6 text-left transition-all duration-300 border-2",
+                isSelected ? "ring-2 md:ring-4 ring-white/30 scale-[1.01] md:scale-[1.02]" : "",
                 isDisabled && !isSelected
                   ? "opacity-50 cursor-not-allowed"
-                  : "hover:scale-[1.02] cursor-pointer",
+                  : "hover:scale-[1.01] md:hover:scale-[1.02] cursor-pointer active:scale-[0.98]",
                 optionBgColors[idx],
               )}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-4">
                 <div
                   className={cn(
-                    "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl font-bold text-white shrink-0",
+                    "w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br flex items-center justify-center text-sm md:text-xl font-bold text-white shrink-0",
                     optionColors[idx],
                   )}
                 >
                   {String.fromCharCode(65 + idx)}
                 </div>
-                <span className="text-xl font-medium">{option}</span>
+                <span className="text-sm md:text-xl font-medium line-clamp-2">{option}</span>
               </div>
               {isSelected && hasAnswered && (
-                <div className="absolute top-2 right-2">
-                  <div className="bg-white/20 rounded-full p-1">
-                    <Clock className="w-5 h-5" />
+                <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2">
+                  <div className="bg-white/20 rounded-full p-0.5 md:p-1">
+                    <Clock className="w-3 h-3 md:w-5 md:h-5" />
                   </div>
                 </div>
               )}
@@ -320,10 +318,10 @@ export function QuizSlide({
       {/* Answered confirmation */}
       {hasAnswered && !showResults && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-6 py-3">
-            <Zap className="w-5 h-5 text-emerald-400" />
-            <span className="text-emerald-300">
-              Đã gửi câu trả lời! Đang chờ kết quả...
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-4 md:px-6 py-2 md:py-3">
+            <Zap className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" />
+            <span className="text-sm md:text-base text-emerald-300">
+              Đã gửi! Đang chờ kết quả...
             </span>
           </div>
         </div>

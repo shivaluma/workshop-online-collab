@@ -57,8 +57,8 @@ function MermaidDiagram({ chart }: { chart: string }) {
 
   if (error) {
     return (
-      <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 mb-4">
-        <p className="text-red-400 text-sm">Mermaid Error: {error}</p>
+      <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-3 md:p-4 mb-4">
+        <p className="text-red-400 text-xs md:text-sm">Mermaid Error: {error}</p>
         <pre className="mt-2 text-xs text-zinc-400 overflow-x-auto">{chart}</pre>
       </div>
     );
@@ -67,7 +67,7 @@ function MermaidDiagram({ chart }: { chart: string }) {
   return (
     <div 
       ref={containerRef}
-      className="my-6 flex justify-center bg-zinc-900/50 rounded-2xl p-6 border border-zinc-700/50 overflow-x-auto"
+      className="my-4 md:my-6 flex justify-center bg-zinc-900/50 rounded-xl md:rounded-2xl p-3 md:p-6 border border-zinc-700/50 overflow-x-auto [&_svg]:max-w-full [&_svg]:h-auto"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
@@ -87,40 +87,40 @@ export function Markdown({ children, className, compact = false }: MarkdownProps
         components={{
         // Headings
         h1: ({ children }) => (
-          <h1 className={cn("text-3xl font-bold text-foreground mb-4", compact && "text-2xl mb-2")}>
+          <h1 className={cn("text-2xl md:text-3xl font-bold text-foreground mb-3 md:mb-4", compact && "text-xl md:text-2xl mb-2")}>
             {children}
           </h1>
         ),
         h2: ({ children }) => (
-          <h2 className={cn("text-2xl font-semibold text-foreground mb-3", compact && "text-xl mb-2")}>
+          <h2 className={cn("text-xl md:text-2xl font-semibold text-foreground mb-2 md:mb-3", compact && "text-lg md:text-xl mb-1 md:mb-2")}>
             {children}
           </h2>
         ),
         h3: ({ children }) => (
-          <h3 className={cn("text-xl font-semibold text-foreground mb-2", compact && "text-lg mb-1")}>
+          <h3 className={cn("text-lg md:text-xl font-semibold text-foreground mb-2", compact && "text-base md:text-lg mb-1")}>
             {children}
           </h3>
         ),
         // Paragraphs
         p: ({ children }) => (
-          <p className={cn("text-muted-foreground leading-relaxed mb-4", compact && "mb-2 text-base")}>
+          <p className={cn("text-sm md:text-base text-muted-foreground leading-relaxed mb-3 md:mb-4", compact && "mb-2 text-sm")}>
             {children}
           </p>
         ),
         // Lists
         ul: ({ children }) => (
-          <ul className={cn("space-y-2 mb-4 list-none", compact && "space-y-1 mb-2")}>
+          <ul className={cn("space-y-1.5 md:space-y-2 mb-3 md:mb-4 list-none", compact && "space-y-1 mb-2")}>
             {children}
           </ul>
         ),
         ol: ({ children }) => (
-          <ol className={cn("space-y-2 mb-4 list-decimal list-inside", compact && "space-y-1 mb-2")}>
+          <ol className={cn("space-y-1.5 md:space-y-2 mb-3 md:mb-4 list-decimal list-inside", compact && "space-y-1 mb-2")}>
             {children}
           </ol>
         ),
         li: ({ children }) => (
-          <li className="flex items-start gap-2 text-muted-foreground">
-            <span className="text-violet-400 mt-1.5">•</span>
+          <li className="flex items-start gap-1.5 md:gap-2 text-sm md:text-base text-muted-foreground">
+            <span className="text-violet-400 mt-1 md:mt-1.5 text-xs md:text-base">•</span>
             <span>{children}</span>
           </li>
         ),
@@ -136,13 +136,13 @@ export function Markdown({ children, className, compact = false }: MarkdownProps
           
           if (isInline) {
             return (
-              <code className="px-1.5 py-0.5 rounded bg-zinc-800 text-emerald-300 font-mono text-sm">
+              <code className="px-1 md:px-1.5 py-0.5 rounded bg-zinc-800 text-emerald-300 font-mono text-xs md:text-sm">
                 {children}
               </code>
             );
           }
           return (
-            <code className={cn("font-mono text-sm", className)} {...props}>
+            <code className={cn("font-mono text-xs md:text-sm", className)} {...props}>
               {children}
             </code>
           );
@@ -154,14 +154,14 @@ export function Markdown({ children, className, compact = false }: MarkdownProps
             return <>{children}</>;
           }
           return (
-            <pre className="bg-zinc-900 rounded-xl p-4 overflow-x-auto border border-zinc-700/50 mb-4" {...props}>
+            <pre className="bg-zinc-900 rounded-lg md:rounded-xl p-3 md:p-4 overflow-x-auto border border-zinc-700/50 mb-3 md:mb-4 text-xs md:text-sm" {...props}>
               {children}
             </pre>
           );
         },
         // Blockquote
         blockquote: ({ children }) => (
-          <blockquote className="border-l-4 border-violet-500/50 pl-4 italic text-muted-foreground my-4">
+          <blockquote className="border-l-2 md:border-l-4 border-violet-500/50 pl-3 md:pl-4 italic text-sm md:text-base text-muted-foreground my-3 md:my-4">
             {children}
           </blockquote>
         ),
@@ -185,26 +185,26 @@ export function Markdown({ children, className, compact = false }: MarkdownProps
         ),
         // Tables
         table: ({ children }) => (
-          <div className="overflow-x-auto mb-4">
-            <table className="w-full border-collapse">{children}</table>
+          <div className="overflow-x-auto mb-3 md:mb-4 -mx-2 px-2">
+            <table className="w-full border-collapse text-xs md:text-sm min-w-[400px]">{children}</table>
           </div>
         ),
         thead: ({ children }) => (
           <thead className="bg-zinc-800/50">{children}</thead>
         ),
         th: ({ children }) => (
-          <th className="border border-zinc-700 px-4 py-2 text-left font-semibold">
+          <th className="border border-zinc-700 px-2 md:px-4 py-1.5 md:py-2 text-left font-semibold whitespace-nowrap">
             {children}
           </th>
         ),
         td: ({ children }) => (
-          <td className="border border-zinc-700 px-4 py-2">{children}</td>
+          <td className="border border-zinc-700 px-2 md:px-4 py-1.5 md:py-2">{children}</td>
         ),
         // Horizontal rule
-        hr: () => <hr className="border-zinc-700 my-6" />,
+        hr: () => <hr className="border-zinc-700 my-4 md:my-6" />,
         // Images (for diagrams)
         img: ({ src, alt }) => (
-          <div className="my-6 rounded-2xl overflow-hidden border border-zinc-700/50 bg-zinc-900/50 p-4">
+          <div className="my-4 md:my-6 rounded-xl md:rounded-2xl overflow-hidden border border-zinc-700/50 bg-zinc-900/50 p-2 md:p-4">
             <img 
               src={src} 
               alt={alt || ""} 
@@ -212,7 +212,7 @@ export function Markdown({ children, className, compact = false }: MarkdownProps
               loading="lazy"
             />
             {alt && (
-              <p className="text-center text-sm text-muted-foreground mt-2 italic">{alt}</p>
+              <p className="text-center text-xs md:text-sm text-muted-foreground mt-2 italic">{alt}</p>
             )}
           </div>
         ),

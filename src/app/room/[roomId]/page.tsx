@@ -253,32 +253,32 @@ export default function ParticipantPage({
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+        <div className="max-w-7xl mx-auto px-2 md:px-4 py-2 md:py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <span className="text-sm md:text-lg font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent shrink-0">
               Workshop
             </span>
             {participantName && (
-              <span className="text-muted-foreground">• {participantName}</span>
+              <span className="text-xs md:text-base text-muted-foreground truncate">• {participantName}</span>
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4 shrink-0">
             {/* Connection status */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               {isConnected ? (
-                <Wifi className="w-4 h-4 text-emerald-400" />
+                <Wifi className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" />
               ) : (
-                <WifiOff className="w-4 h-4 text-rose-400 animate-pulse" />
+                <WifiOff className="w-3 h-3 md:w-4 md:h-4 text-rose-400 animate-pulse" />
               )}
               <span
                 className={cn(
-                  "text-xs",
+                  "text-[10px] md:text-xs hidden sm:inline",
                   isConnected ? "text-emerald-400" : "text-rose-400"
                 )}
               >
                 {isReconnecting
-                  ? "Đang kết nối lại..."
+                  ? "Đang kết nối..."
                   : isConnected
                     ? "Live"
                     : "Offline"}
@@ -289,11 +289,11 @@ export default function ParticipantPage({
             {myScore && (
               <button
                 onClick={() => setShowScoresSidebar(!showScoresSidebar)}
-                className="flex items-center gap-2 bg-violet-500/20 border border-violet-500/30 rounded-full px-4 py-1.5 hover:bg-violet-500/30 transition-colors"
+                className="flex items-center gap-1 md:gap-2 bg-violet-500/20 border border-violet-500/30 rounded-full px-2 md:px-4 py-1 md:py-1.5 hover:bg-violet-500/30 transition-colors"
               >
-                <Trophy className="w-4 h-4 text-violet-400" />
-                <span className="font-mono font-bold">{myScore.score}</span>
-                <span className="text-xs text-muted-foreground">
+                <Trophy className="w-3 h-3 md:w-4 md:h-4 text-violet-400" />
+                <span className="font-mono font-bold text-sm md:text-base">{myScore.score}</span>
+                <span className="text-[10px] md:text-xs text-muted-foreground">
                   #{myScore.rank}
                 </span>
               </button>
@@ -303,7 +303,7 @@ export default function ParticipantPage({
       </header>
 
       {/* Main content */}
-      <main className="pt-16 min-h-screen">
+      <main className="pt-12 md:pt-16 min-h-screen">
         <SlideDeck
           slides={slideDeckData.slides}
           currentSlide={currentSlide}
@@ -329,15 +329,15 @@ export default function ParticipantPage({
             className="fixed inset-0 bg-black/50 z-40"
             onClick={() => setShowScoresSidebar(false)}
           />
-          <div className="fixed right-0 top-0 bottom-0 w-80 bg-zinc-900 border-l border-zinc-800 z-50 p-4 overflow-y-auto animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-amber-400" />
+          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 max-w-sm bg-zinc-900 border-l border-zinc-800 z-50 p-3 md:p-4 overflow-y-auto animate-in slide-in-from-right duration-300">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
+                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
                 Bảng xếp hạng
               </h3>
               <button
                 onClick={() => setShowScoresSidebar(false)}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground p-1"
               >
                 ✕
               </button>

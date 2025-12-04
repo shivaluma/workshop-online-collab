@@ -20,12 +20,12 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2 md:mb-3">
         {/* Timer */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <Clock
             className={cn(
-              "w-5 h-5 transition-colors",
+              "w-4 h-4 md:w-5 md:h-5 transition-colors",
               isCritical
                 ? "text-rose-500 animate-pulse"
                 : isLow
@@ -35,7 +35,7 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
           />
           <span
             className={cn(
-              "text-2xl font-mono font-bold tabular-nums transition-colors",
+              "text-xl md:text-2xl font-mono font-bold tabular-nums transition-colors",
               isCritical
                 ? "text-rose-500"
                 : isLow
@@ -49,10 +49,10 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
 
         {/* Current Score */}
         {showScore && isActive && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Zap
               className={cn(
-                "w-5 h-5 transition-colors",
+                "w-4 h-4 md:w-5 md:h-5 transition-colors",
                 currentScore > 700
                   ? "text-emerald-400"
                   : currentScore > 400
@@ -62,7 +62,7 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
             />
             <span
               className={cn(
-                "text-2xl font-mono font-bold tabular-nums transition-all",
+                "text-xl md:text-2xl font-mono font-bold tabular-nums transition-all",
                 currentScore > 700
                   ? "text-emerald-400"
                   : currentScore > 400
@@ -72,13 +72,13 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
             >
               +{currentScore}
             </span>
-            <span className="text-sm text-muted-foreground">điểm</span>
+            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">điểm</span>
           </div>
         )}
       </div>
       
       {/* Progress bar */}
-      <div className="relative h-3 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="relative h-2 md:h-3 bg-zinc-800 rounded-full overflow-hidden">
         <div
           className={cn(
             "absolute inset-y-0 left-0 rounded-full transition-all duration-100",
@@ -100,8 +100,8 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
       
       {/* Score hint */}
       {showScore && isActive && (
-        <p className="text-center text-xs text-muted-foreground mt-2">
-          Trả lời đúng và nhanh để được nhiều điểm hơn!
+        <p className="text-center text-[10px] md:text-xs text-muted-foreground mt-1.5 md:mt-2">
+          Trả lời nhanh = nhiều điểm hơn!
         </p>
       )}
     </div>
