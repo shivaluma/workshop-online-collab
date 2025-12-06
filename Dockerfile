@@ -11,7 +11,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.pnpm-store pnpm install --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -22,10 +22,11 @@ COPY . .
 # Generate Prisma Client
 RUN pnpm prisma generate
 
-# Build Next.js
+# Build Next.js with cache mounts
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-RUN pnpm build
+RUN --mount=type=cache,target=/app/.next/cache \
+    pnpm build
 
 # Production image, copy all the files and run
 FROM base AS runner
