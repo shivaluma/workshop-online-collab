@@ -3,10 +3,12 @@
 import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { slideDeck as defaultSlideDeck, getPreset } from "@/lib/slides";
+import { getHostNotes } from "@/lib/slides/host-notes";
 import { useWebSocket } from "@/lib/ws";
 import type { ScoreEntry, QuizStats, ParticipantInfo } from "@/lib/ws/types";
 import type { SlideDeck as SlideDeckType } from "@/lib/slides/types";
 import { SlideDeck, HostControls } from "@/components/workshop";
+import { HostNotes } from "@/components/workshop/HostNotes";
 import { toast, Toaster } from "sonner";
 import { Copy, Check } from "lucide-react";
 
@@ -35,6 +37,7 @@ export default function HostPage({
   const [slideDeckData, setSlideDeckData] = useState<SlideDeckType | null>(
     null
   );
+  const [slidePreset, setSlidePreset] = useState<string | null>(null);
 
   // Quiz state
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -78,12 +81,14 @@ export default function HostPage({
 
         // Load slides from room data
         let slides: SlideDeckType | null = null;
+        let preset: string | null = null;
         
         if (roomData.customSlides) {
           // Custom uploaded slides
           slides = roomData.customSlides as SlideDeckType;
         } else if (roomData.slidePreset) {
           // Preset slides
+          preset = roomData.slidePreset;
           const presetData = getPreset(roomData.slidePreset);
           if (presetData) {
             slides = presetData;
@@ -96,6 +101,7 @@ export default function HostPage({
         }
 
         setSlideDeckData(slides);
+        setSlidePreset(preset);
         setHostSecret(secret);
         
         // Initialize quizzes
@@ -349,6 +355,14 @@ export default function HostPage({
           showLeaderboard={showLeaderboard}
         />
       </div>
+
+      {/* Host notes */}
+      {slidePreset && (
+        <HostNotes
+          notes={getHostNotes(slidePreset, currentSlide)}
+          slideTitle={slideDeckData.slides[currentSlide]?.title}
+        />
+      )}
 
       {/* Host controls */}
       <HostControls
