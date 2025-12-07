@@ -20,40 +20,47 @@
     {
       "id": 2,
       "type": "article",
+      "title": "Performance vs Scalability",
+      "emoji": "⚡",
+      "content": "### Hai loại vấn đề khác nhau:\n\n| Vấn đề | Triệu chứng | Ví dụ |\n|--------|-------------|-------|\n| **Performance** | Chậm với **1 user** | Query chạy 10 giây |\n| **Scalability** | Nhanh với 1 user, **chậm khi 1000 users** | Homepage load 50ms → 5s khi traffic cao |\n\n### Cách nhận biết:\n\n```\n🐌 Performance Problem:\n   1 user → Chậm\n   \n📈 Scalability Problem:\n   1 user → Nhanh ✅\n   100 users → Bắt đầu chậm ⚠️\n   1000 users → Chết 💀\n```\n\n> **Workshop này focus vào Scalability** - làm sao để hệ thống vẫn nhanh khi có nhiều users?"
+    },
+    {
+      "id": 3,
+      "type": "article",
       "title": "Phase 0: Khởi đầu đơn giản",
       "emoji": "🌱",
       "content": "![Phase 0 Architecture](https://martinjoo.dev/_nuxt/img/1.b0dd624.png)\n\nKhi bắt đầu project, kiến trúc thường đơn giản như thế này:\n\n- **Frontend**: Web app, mobile app, hoặc desktop app\n- **Backend**: API server + Database\n\n### Đặc điểm:\n- ✅ Đơn giản, dễ setup và deploy\n- ✅ Hoạt động tốt khi traffic thấp\n- ✅ Dễ debug - mọi thứ ở 1 chỗ\n\n> Kiến trúc này phù hợp với **startup giai đoạn đầu** hoặc **internal tools** với vài chục users.\n\n*Nó hoạt động tốt... cho đến khi bạn gặp một số vấn đề.*"
     },
     {
-      "id": 3,
+      "id": 4,
       "type": "article",
       "title": "Phase 0: Vấn đề xuất hiện",
       "emoji": "⚠️",
       "content": "### Khi nào Phase 0 bắt đầu có vấn đề?\n\nHãy tưởng tượng app của bạn cần:\n\n| Task | Thời gian xử lý |\n|------|----------------|\n| 🖼️ Resize ảnh profile | 1-5 giây |\n| 📧 Gửi email xác nhận | 500ms-2s |\n| 📄 Tạo PDF report | 2-10 giây |\n| 🔄 Đồng bộ với API bên ngoài | 1-30 giây |\n\n### Chuyện gì xảy ra?\n\n```\nUser click \"Upload Avatar\"\n     ↓\nAPI nhận request\n     ↓\nAPI resize ảnh... (5 giây)\n     ↓\nUser nhìn loading spinner 5 giây 😤\n     ↓\nCác users khác cũng phải chờ!\n```\n\n> **Vấn đề**: Những task chạy lâu (>200-300ms) đang **block** cả API server!"
     },
     {
-      "id": 4,
+      "id": 5,
       "type": "article",
       "title": "Phase 1: Giải pháp - Job Queue",
       "emoji": "📬",
       "content": "### Ý tưởng đơn giản:\n\n> **Đừng bắt API làm việc nặng!** Giao cho người khác.\n\n```mermaid\nflowchart LR\n    subgraph Trước[\"❌ Trước (Phase 0)\"]\n        A1[\"👤 User\"] --> B1[\"🖥️ API\"]\n        B1 -->|\"5 giây 😤\"| A1\n    end\n```\n\n```mermaid\nflowchart LR\n    subgraph Sau[\"✅ Sau (Phase 1)\"]\n        A2[\"👤 User\"] --> B2[\"🖥️ API\"]\n        B2 -->|\"100ms 🎉\"| A2\n        B2 --> Q[\"📬 Queue\"]\n        Q --> W[\"⚙️ Worker\"]\n    end\n```\n\n### Kết quả:\n- API trả response **ngay lập tức** (100ms)\n- Worker xử lý task nặng **trong background**\n- User không cần chờ!"
     },
     {
-      "id": 5,
+      "id": 6,
       "type": "article",
       "title": "Phase 1: Job Queue là gì?",
       "emoji": "🎓",
       "content": "### Hiểu đơn giản qua ví dụ đời thường:\n\n| Thành phần | Vai trò | Ví dụ: Quán cafe |\n|------------|---------|------------------|\n| **API** | Nhận order nhanh | Thu ngân - nhận order |\n| **Queue** | Danh sách chờ | Giấy ghi order |\n| **Worker** | Làm việc nặng | Barista - pha cafe |\n\n### Flow thực tế:\n\n```mermaid\nsequenceDiagram\n    participant U as 👤 User\n    participant A as 🖥️ API\n    participant Q as 📬 Queue\n    participant W as ⚙️ Worker\n    \n    U->>A: Upload ảnh 5MB\n    A->>Q: Thêm job \"resize ảnh\"\n    A-->>U: \"OK! Đang xử lý...\" (100ms)\n    Note over U: User tiếp tục dùng app\n    Q->>W: Lấy job từ queue\n    W->>W: Resize ảnh (5s)\n    W-->>U: Push notification: \"Ảnh đã sẵn sàng!\"\n```"
     },
     {
-      "id": 6,
+      "id": 7,
       "type": "article",
       "title": "Phase 1: Retry & Dead Letter Queue",
       "emoji": "🔄",
       "content": "### Điều cần biết: Job có thể FAIL!\n\n```mermaid\nflowchart LR\n    J[\"📋 Job\"] --> W[\"⚙️ Worker\"]\n    W -->|\"❌ Fail\"| R[\"🔄 Retry\"]\n    R -->|\"Lần 1-4\"| W\n    R -->|\"Lần 5 fail\"| D[\"💀 Dead Letter Queue\"]\n    W -->|\"✅ Success\"| S[\"✓ Done\"]\n```\n\n### Dead Letter Queue (DLQ) là gì?\n\nJob fail quá nhiều lần → Chuyển vào **DLQ** để:\n- ❌ Tránh làm nghẽn queue chính\n- 🔍 Admin có thể review và xử lý sau\n- 📊 Monitor lỗi hệ thống\n\n### Queue Technologies:\n\n| Tech | Đặc điểm | Khi nào dùng |\n|------|----------|-------------|\n| **Redis** | Phổ biến, đơn giản | Đa số projects |\n| **RabbitMQ** | Nhiều features | Complex routing |\n| **Database** | Simplest setup | MVP, small scale |"
     },
     {
-      "id": 7,
+      "id": 8,
       "type": "quiz",
       "quizId": "q1",
       "title": "🎯 Quiz: Job Queue",
@@ -69,28 +76,28 @@
       "explanation": "Job queue cho phép decouple: user đặt hàng thành công, email job được queue và retry khi service recover. Không block business flow!"
     },
     {
-      "id": 8,
+      "id": 9,
       "type": "article",
       "title": "Phase 1: Setup đơn giản nhất",
       "emoji": "🖥️",
       "content": "![Phase 1 Architecture](https://martinjoo.dev/_nuxt/img/2.543ab67.png)\n\n### Setup ban đầu:\n\nMột server duy nhất chạy **2 processes**:\n1. 🖥️ API server (nginx/express)\n2. ⚙️ Worker process\n\n### Ưu điểm:\n- ✅ **Không block** user requests với long-running tasks\n- ✅ Setup **cực kỳ đơn giản** - không cần thêm server\n- ✅ Chi phí thấp - chỉ 1 server\n\n> *Đây là setup phổ biến nhất cho projects nhỏ với vài chục jobs mỗi ngày.*"
     },
     {
-      "id": 9,
+      "id": 10,
       "type": "article",
       "title": "Phase 1 → 2: Vấn đề mới",
       "emoji": "💥",
       "content": "### Nhưng có một vấn đề...\n\n> Worker và API **chạy chung máy** = **share resources**!\n\n### Tình huống nguy hiểm:\n\n```\n📹 User upload video 1GB\n     ↓\n⚙️ Worker bắt đầu transcoding (cần 80% CPU, 4GB RAM)\n     ↓\n🖥️ API còn lại 20% CPU, 1GB RAM\n     ↓\n👥 100 users khác load homepage\n     ↓\n🐌 Response time: 50ms → 2000ms!\n```\n\n| Thành phần | Resources cần |\n|------------|---------------|\n| API serving 100 users | 30% CPU |\n| Worker transcoding video | 80% CPU |\n| **Tổng cần** | **110%** ❌ |"
     },
     {
-      "id": 10,
+      "id": 11,
       "type": "article",
       "title": "Phase 2: Tách Worker riêng",
       "emoji": "🔀",
       "content": "![Phase 2 Architecture](https://martinjoo.dev/_nuxt/img/3.859e47b.png)\n\n### Giải pháp: Tách API và Worker ra nodes riêng!\n\n```mermaid\nflowchart TB\n    subgraph Server_1[\"🖥️ Server 1 - API\"]\n        A[\"API Server\"]\n    end\n    subgraph Server_2[\"🖥️ Server 2 - Workers\"]\n        W1[\"⚙️ Worker 1\"]\n        W2[\"⚙️ Worker 2\"]\n    end\n    Q[(\"📬 Queue\")]\n    DB[(\"🗄️ Database\")]\n    \n    A --> Q\n    Q --> W1 & W2\n    A --> DB\n    W1 & W2 --> DB\n```\n\n### Kết quả:\n- 🖥️ **Server 1**: Chỉ serve API → 100% resources cho users\n- ⚙️ **Server 2**: Chỉ chạy Workers → thoải mái dùng CPU/RAM\n- ✅ **Scale độc lập!**"
     },
     {
-      "id": 11,
+      "id": 12,
       "type": "quiz",
       "quizId": "q2",
       "title": "🎯 Quiz: Resource Isolation",
@@ -106,35 +113,35 @@
       "explanation": "PDF generation là background job, scale workers riêng! API server giữ nguyên để serve user requests. Tách biệt = scale đúng chỗ cần."
     },
     {
-      "id": 12,
+      "id": 13,
       "type": "article",
       "title": "Phase 2 → 3: Traffic tăng",
       "emoji": "📈",
       "content": "### Hệ thống hiện tại:\n\n```\n👥 Users → 🖥️ 1 API Server → 🗄️ Database\n                    ↓\n              📬 Queue → ⚙️ Workers (separate)\n```\n\n### Giờ hãy tưởng tượng:\n\n- 📈 Users tăng từ 100 → 10,000\n- 🔥 API server đang xử lý 1000 requests/second\n- 💀 Server bắt đầu **quá tải**!\n\n### Hai lựa chọn:\n\n| | Vertical ↑ | Horizontal → |\n|--|-----------|-------------|\n| **Cách làm** | Nâng cấp 1 server | Thêm nhiều servers |\n| **Giới hạn** | Có (max RAM/CPU) | Gần như không |\n| **Downtime** | Cần restart | Zero downtime |\n| **Fault tolerance** | ❌ 1 chết = tất cả chết | ✅ 1 chết = còn lại chạy |"
     },
     {
-      "id": 13,
+      "id": 14,
       "type": "article",
       "title": "Phase 3: Horizontal Scaling",
       "emoji": "📈",
       "content": "![Phase 3 Architecture](https://martinjoo.dev/_nuxt/img/4.5f9791d.png)\n\n### Tại sao Horizontal?\n\n| Vertical | Horizontal |\n|----------|------------|\n| 🏋️ 1 người cực khỏe | 👥 10 người bình thường |\n| Người đó ốm = stop | 1 người ốm = 9 người làm tiếp |\n\n### Ví dụ cụ thể:\n\n**Cùng capacity 6 cores + 12GB RAM:**\n\n| Approach | Setup | Khi 1 server die |\n|----------|-------|------------------|\n| Vertical | 1 server $100/m | ❌ **Chết hết** |\n| Horizontal | 3 servers $35/m each | ✅ 2 servers còn chạy |\n\n### Nhưng có vấn đề: **Frontend gọi server nào?**"
     },
     {
-      "id": 14,
+      "id": 15,
       "type": "article",
       "title": "Phase 4: Load Balancer",
       "emoji": "⚖️",
       "content": "### Giải pháp: Load Balancer đứng giữa\n\n```mermaid\nflowchart TB\n    U[\"👥 Users\"] --> LB[\"⚖️ Load Balancer\"]\n    LB --> S1[\"🖥️ Server 1\"]\n    LB --> S2[\"🖥️ Server 2\"]\n    LB --> S3[\"🖥️ Server 3\"]\n    S1 & S2 & S3 --> DB[(\"🗄️ Database\")]\n    \n    style LB fill:#8b5cf6,stroke:#6d28d9,color:#fff\n```\n\n### Load Balancer làm gì?\n\n| Vai trò | Mô tả |\n|---------|-------|\n| 🚪 **Single entry point** | Users chỉ cần biết 1 địa chỉ |\n| ⚖️ **Distribute traffic** | Chia đều requests |\n| 🏥 **Health check** | Loại bỏ server không healthy |\n| 🔒 **SSL termination** | Handle HTTPS |"
     },
     {
-      "id": 15,
+      "id": 16,
       "type": "article",
       "title": "Phase 4: Load Balancing Algorithms",
       "emoji": "🔄",
       "content": "### Các thuật toán phân tải:\n\n| Algorithm | Cách hoạt động | Use case |\n|-----------|---------------|----------|\n| **Round Robin** | Lần lượt A→B→C→A... | Servers giống nhau |\n| **Least Connections** | Gửi đến server ít connections nhất | Requests không đều |\n| **IP Hash** | Cùng IP → cùng server | Cần sticky session |\n| **Weighted** | Server mạnh nhận nhiều hơn | Servers khác nhau |\n\n```mermaid\nsequenceDiagram\n    participant LB as ⚖️ Load Balancer\n    participant A as Server A\n    participant B as Server B\n    participant C as Server C\n    \n    LB->>A: Request 1\n    LB->>B: Request 2\n    LB->>C: Request 3\n    LB->>A: Request 4 (vòng lại)\n```\n\n### Tools: **nginx**, **HAProxy**, **Traefik**, **AWS ALB**"
     },
     {
-      "id": 16,
+      "id": 17,
       "type": "quiz",
       "quizId": "q3",
       "title": "🎯 Quiz: Load Balancer",
@@ -150,21 +157,21 @@
       "explanation": "Round Robin chia đều requests, không quan tâm server capacity! A và C yếu hơn nhưng nhận traffic bằng B → quá tải trước. Dùng Weighted LB cho trường hợp này."
     },
     {
-      "id": 17,
+      "id": 18,
       "type": "article",
       "title": "Phase 4 → 5: Vấn đề Local State",
       "emoji": "🤔",
       "content": "### Hệ thống hoạt động tốt... cho đến khi:\n\n```\n1. 👤 User A upload avatar.png → Server 1\n2. 🖥️ Server 1 lưu file vào /uploads/avatar.png\n3. 👤 User A refresh page\n4. ⚖️ LB route đến Server 2\n5. 🖥️ Server 2: \"File not found!\" ❌\n```\n\n### Tại sao?\n\n> File chỉ tồn tại trên **local disk của Server 1**!\n\n### Các loại \"local state\" gây vấn đề:\n\n| Local State | Vấn đề |\n|-------------|--------|\n| 📁 Files trên disk | Không share được giữa servers |\n| 🍪 Sessions trong memory | Mất khi đổi server |\n| 💾 Cache trong RAM | Mỗi server có cache khác nhau |"
     },
     {
-      "id": 18,
+      "id": 19,
       "type": "article",
       "title": "Phase 5: Stateless Architecture",
       "emoji": "☁️",
       "content": "![Phase 5 Architecture](https://martinjoo.dev/_nuxt/img/7.b831e0d.png)\n\n### Rule vàng: Tất cả servers phải GIỐNG HỆT NHAU!\n\n### Giải pháp: Chuyển state ra external services\n\n| Local State | External Solution |\n|-------------|------------------|\n| 📁 **Files** | AWS S3, MinIO, GCS |\n| 🍪 **Sessions** | Redis, Database |\n| 💾 **Cache** | Redis, Memcached |\n\n```mermaid\nflowchart LR\n    S1[\"🖥️ Server 1\"] --> S3[(\"☁️ S3 Bucket\")]\n    S2[\"🖥️ Server 2\"] --> S3\n    S3 --> S1\n    S3 --> S2\n```\n\n> **Kết quả**: Tất cả servers đều access được cùng data!"
     },
     {
-      "id": 19,
+      "id": 20,
       "type": "quiz",
       "quizId": "q4",
       "title": "🎯 Quiz: Stateless",
@@ -180,28 +187,28 @@
       "explanation": "JWT là stateless by design! Token chứa đủ thông tin để verify, không cần server lưu state. Khác với session-based auth cần shared session store."
     },
     {
-      "id": 20,
+      "id": 21,
       "type": "article",
       "title": "Phase 5 → 6: Database bottleneck",
       "emoji": "🔥",
       "content": "### Vấn đề mới: Database overload!\n\n```\n👥 Users → ⚖️ LB → 🖥️ 3 Servers → 🗄️ Database\n```\n\n| Metric | Giá trị |\n|--------|--------|\n| API requests/sec | 10,000 |\n| DB queries/sec | 50,000 (N+1 queries!) |\n| DB response time | 50ms → 500ms 📈 |\n\n### Phân tích:\n\n```\n❌ Homepage load 10 products\n   → 1 query products + 10 queries categories\n   → 11 queries × 10,000 requests\n   → 110,000 queries/sec!\n```\n\n> *Nếu data ít thay đổi, có cần query DB mỗi lần không?*"
     },
     {
-      "id": 21,
+      "id": 22,
       "type": "article",
       "title": "Phase 6: Caching",
       "emoji": "⚡",
       "content": "### Ý tưởng: Lưu kết quả lại, không query lại!\n\n```mermaid\nflowchart LR\n    A[\"👤 User\"] --> API[\"🖥️ API\"]\n    API -->|\"1. Check cache\"| C[(\"⚡ Redis\")]\n    C -->|\"HIT: Return ngay!\"| API\n    C -->|\"MISS\"| DB[(\"🗄️ Database\")]\n    DB -->|\"2. Save to cache\"| C\n    \n    style C fill:#10b981,stroke:#059669,color:#fff\n```\n\n### Hiệu quả:\n\n| Metric | Không cache | Có cache |\n|--------|-------------|----------|\n| DB queries/sec | 50,000 | 5,000 (-90%) |\n| Response time | 50-200ms | 1-5ms |\n| DB CPU | 100% | 10% |"
     },
     {
-      "id": 22,
+      "id": 23,
       "type": "article",
       "title": "Phase 6: Cache-Aside Pattern",
       "emoji": "🔍",
       "content": "### Pattern phổ biến nhất: Lazy Loading\n\n```javascript\nasync function getProduct(id) {\n  // 1. Check cache first\n  const cached = await redis.get(`product:${id}`);\n  if (cached) return JSON.parse(cached); // HIT!\n  \n  // 2. Cache miss → query DB\n  const product = await db.product.findById(id);\n  \n  // 3. Save to cache (expire after 1 hour)\n  await redis.set(`product:${id}`, JSON.stringify(product), 'EX', 3600);\n  \n  return product;\n}\n```\n\n### Cache Invalidation - Vấn đề khó nhất!\n\n```javascript\nasync function updateProduct(id, data) {\n  await db.product.update(id, data);\n  await redis.del(`product:${id}`); // QUAN TRỌNG!\n}\n```"
     },
     {
-      "id": 23,
+      "id": 24,
       "type": "quiz",
       "quizId": "q5",
       "title": "🎯 Quiz: Cache Thundering Herd",
@@ -217,28 +224,28 @@
       "explanation": "Thundering Herd: cache expire → tất cả requests cùng miss → cùng query DB → DB crash! Giải pháp: cache locking, staggered TTL, hoặc background refresh."
     },
     {
-      "id": 24,
+      "id": 25,
       "type": "article",
       "title": "Phase 6 → 7: Frontend latency",
       "emoji": "🌐",
       "content": "### Backend đã optimize xong. Frontend thì sao?\n\n| Website | JS Bundle | Total Assets |\n|---------|-----------|-------------|\n| Zoom | 6MB | ~15MB |\n| Facebook | 3MB | ~10MB |\n| Average SPA | 1-2MB | ~5MB |\n\n### Vấn đề:\n\n```\n👤 User ở Việt Nam\n🖥️ Server ở US\n📦 Download 5MB assets\n⏱️ Latency: 200ms × nhiều round trips = 😤\n```\n\n> Distance = Latency. Không thể giảm được!\n\n*...hay có thể?*"
     },
     {
-      "id": 25,
+      "id": 26,
       "type": "article",
       "title": "Phase 7: CDN",
       "emoji": "🌍",
       "content": "### CDN = Content Delivery Network\n\n```mermaid\nflowchart LR\n    subgraph Vietnam[\"🇻🇳 Vietnam\"]\n        U1[\"👤 User VN\"]\n    end\n    subgraph Singapore[\"🇸🇬 Singapore\"]\n        CDN1[\"📦 CDN Edge\"]\n    end\n    subgraph USA[\"🇺🇸 USA\"]\n        S[\"🖥️ Origin Server\"]\n    end\n    \n    U1 -->|\"20ms ✅\"| CDN1\n    CDN1 -.->|\"Cache từ Origin\"| S\n    \n    style CDN1 fill:#f59e0b,stroke:#d97706,color:#000\n```\n\n### So sánh:\n\n| | Không CDN | Có CDN |\n|--|-----------|--------|\n| **Distance** | VN → US (13,000km) | VN → SG (1,500km) |\n| **Latency** | 200ms+ | 20ms |\n| **Load time** | 5-10s | 0.5-1s |"
     },
     {
-      "id": 26,
+      "id": 27,
       "type": "article",
       "title": "Phase 7: CDN Details",
       "emoji": "🚀",
       "content": "### CDN cache những gì?\n\n| Content | Cacheable? | TTL |\n|---------|------------|-----|\n| ✅ JS bundles | Yes | Long (versioned) |\n| ✅ CSS files | Yes | Long |\n| ✅ Images | Yes | Long |\n| ✅ Fonts | Yes | Very long |\n| ⚠️ HTML | Sometimes | Short |\n| ❌ API responses | Usually no | - |\n\n### Cache Busting:\n\n```html\n<!-- Version trong filename -->\n<script src=\"/bundle.a1b2c3d4.js\"></script>\n\n<!-- Khi deploy mới -->\n<script src=\"/bundle.e5f6g7h8.js\"></script>\n```\n\n### Providers: **Cloudflare**, **AWS CloudFront**, **Vercel**, **Bunny CDN**"
     },
     {
-      "id": 27,
+      "id": 28,
       "type": "quiz",
       "quizId": "q6",
       "title": "🎯 Quiz: CDN Cache",
@@ -254,28 +261,28 @@
       "explanation": "CDN cache invalidation: purge cache thủ công hoặc dùng cache busting (versioned filenames như bundle.v2.js). Đây là lý do cần build tools tự generate hash trong filename!"
     },
     {
-      "id": 28,
+      "id": 29,
       "type": "article",
       "title": "Phase 7 → 8: Database SPOF",
       "emoji": "🎯",
       "content": "### Nhìn lại hệ thống:\n\n```\n👥 Users → 🌍 CDN → ⚖️ LB → 🖥️ 3 Servers → ⚡ Redis → 🗄️ Database\n```\n\n### Đố vui: Đâu là điểm yếu?\n\n| Component | Instances | Nếu chết? |\n|-----------|-----------|----------|\n| CDN | Global | ✅ Fallback |\n| Load Balancer | Managed | ✅ Redundant |\n| API Servers | 3 | ✅ Còn 2 |\n| Redis | 1 | ⚠️ Cache miss, OK |\n| **Database** | **1** | **❌ CHẾT HẾT!** |\n\n### Single Point of Failure (SPOF)\n\n> **Database duy nhất = Nếu chết, cả hệ thống chết!**"
     },
     {
-      "id": 29,
+      "id": 30,
       "type": "article",
       "title": "Phase 8: Database Replication",
       "emoji": "🗃️",
       "content": "### Leader-Follower Pattern\n\n```mermaid\nflowchart TB\n    API[\"🖥️ API Servers\"] -->|\"WRITE\"| L[(\"👑 Leader\")]\n    API -->|\"READ\"| F1[(\"📖 Follower 1\")]\n    API -->|\"READ\"| F2[(\"📖 Follower 2\")]\n    L -->|\"Replicate\"| F1\n    L -->|\"Replicate\"| F2\n    \n    style L fill:#f59e0b,stroke:#d97706\n    style F1 fill:#3b82f6,stroke:#2563eb\n    style F2 fill:#3b82f6,stroke:#2563eb\n```\n\n| Role | Operations | Scale |\n|------|------------|-------|\n| **Leader** | WRITE + READ | 1 instance |\n| **Follower** | READ only | N instances |\n\n> **90% apps có nhiều READ hơn WRITE** → Scale followers!"
     },
     {
-      "id": 30,
+      "id": 31,
       "type": "article",
       "title": "Phase 8: Replication Lag",
       "emoji": "⏱️",
       "content": "### Vấn đề: Replication không instant!\n\n```\n1. User update name = \"John\" → Leader\n2. Leader replicate → Followers (mất 50-100ms)\n3. User refresh ngay lập tức → Read từ Follower\n4. Follower chưa có data mới → Hiện tên cũ! 😱\n```\n\n### Giải pháp:\n\n| Approach | Mô tả | Trade-off |\n|----------|-------|----------|\n| **Read-your-writes** | Sau write, read từ Leader | Tăng load Leader |\n| **Sticky session** | User luôn đọc từ 1 replica | Khó load balance |\n| **Causal consistency** | Track dependencies | Complex |\n\n### Khi nào chấp nhận lag?\n\n- ✅ Social feed (vài giây OK)\n- ✅ Product listings\n- ❌ Banking transactions\n- ❌ Inventory counts"
     },
     {
-      "id": 31,
+      "id": 32,
       "type": "quiz",
       "quizId": "q7",
       "title": "🎯 Quiz: Replication",
@@ -291,35 +298,35 @@
       "explanation": "Replication lag! Order đã write vào Leader nhưng chưa replicate sang Follower. Fix: read-your-writes pattern - sau khi write, read từ Leader trong vài giây."
     },
     {
-      "id": 32,
+      "id": 33,
       "type": "article",
       "title": "Phase 8: High Availability",
       "emoji": "🛡️",
-      "content": "### Automatic Failover\n\n```mermaid\nsequenceDiagram\n    participant L as 👑 Leader\n    participant F1 as 📖 Follower 1\n    participant F2 as 📖 Follower 2\n    \n    Note over L: Leader CRASH! ❌\n    F1->>F1: Detect leader down\n    F1->>F1: Promote to Leader 👑\n    F2->>F1: Replicate from new leader\n    Note over F1,F2: System recovered!\n```\n\n### Checklist loại bỏ SPOF:\n\n| Component | Trước | Sau |\n|-----------|-------|-----|\n| API Servers | 1 server | 3+ servers + LB |\n| Database | 1 DB | Leader + Followers |\n| Cache | 1 Redis | Redis Cluster |\n| Files | Local disk | S3 (replicated) |"
+      "content": "### Automatic Failover\n\n```mermaid\nsequenceDiagram\n    participant L as 👑 Leader\n    participant F1 as 📖 Follower 1\n    participant F2 as 📖 Follower 2\n    \n    Note over L: Leader CRASH! ❌\n    F1->>F1: Detect leader down\n    F1->>F1: Promote to Leader 👑\n    F2->>F1: Replicate from new leader\n    Note over F1,F2: System recovered!\n```\n\n### Availability Numbers (The \"Nines\"):\n\n| SLA | Downtime/năm | Downtime/tháng |\n|-----|--------------|----------------|\n| **99.9%** (3 nines) | 8h 45m | 43 phút |\n| **99.99%** (4 nines) | 52 phút | 4 phút |\n| **99.999%** (5 nines) | 5 phút | 26 giây |\n\n> AWS, GCP thường commit **99.99%** cho managed services"
     },
     {
-      "id": 33,
+      "id": 34,
       "type": "article",
       "title": "Phase 8: Sharding - Khi 1 DB không đủ",
       "emoji": "🔀",
       "content": "### Replication giải quyết READ, nhưng WRITE thì sao?\n\n| Vấn đề | Replication giải quyết? |\n|--------|------------------------|\n| READ scale | ✅ Thêm followers |\n| High Availability | ✅ Failover |\n| WRITE scale | ❌ Vẫn 1 Leader! |\n| Data quá lớn | ❌ Mỗi node full copy |\n\n### Khi nào cần Sharding?\n\n- 📊 Data > 1TB, 1 server không chứa nổi\n- ✍️ Write-heavy workload (10K+ writes/sec)\n- 🌍 Geo-distributed users cần low latency\n\n> **Sharding = Chia data ra nhiều databases!**"
     },
     {
-      "id": 34,
+      "id": 35,
       "type": "article",
       "title": "Phase 8: Sharding Strategies",
       "emoji": "🗂️",
       "content": "### Horizontal Partitioning (Sharding)\n\n```mermaid\nflowchart TB\n    API[\"🖥️ API\"] --> R[\"🔀 Router\"]\n    R -->|\"user_id 1-1M\"| S1[(\"🗄️ Shard 1\")]\n    R -->|\"user_id 1M-2M\"| S2[(\"🗄️ Shard 2\")]\n    R -->|\"user_id 2M-3M\"| S3[(\"🗄️ Shard 3\")]\n    \n    style S1 fill:#3b82f6,stroke:#2563eb\n    style S2 fill:#10b981,stroke:#059669\n    style S3 fill:#f59e0b,stroke:#d97706\n```\n\n### Shard Key Strategies:\n\n| Strategy | Ví dụ | Ưu điểm | Nhược điểm |\n|----------|-------|---------|------------|\n| **Range** | user_id 1-1M | Dễ implement | Hot spots |\n| **Hash** | hash(user_id) % 3 | Phân bố đều | Range query khó |\n| **Geo** | region = 'VN' | Low latency | Uneven distribution |"
     },
     {
-      "id": 35,
+      "id": 36,
       "type": "article",
       "title": "Phase 8: Sharding Challenges",
       "emoji": "⚠️",
       "content": "### Sharding KHÔNG miễn phí!\n\n| Challenge | Mô tả |\n|-----------|-------|\n| 🔗 **Cross-shard queries** | JOIN giữa shards = nightmare |\n| 🔄 **Resharding** | Thêm shard = migrate TB data |\n| 🆔 **Global unique IDs** | Auto-increment không work |\n| 📊 **Aggregations** | COUNT(*) cần query tất cả shards |\n\n### Ví dụ Cross-shard Problem:\n\n```sql\n-- User ở Shard 1, Orders ở Shard 2\n-- Query này KHÔNG THỂ chạy đơn giản!\nSELECT users.name, orders.total\nFROM users\nJOIN orders ON users.id = orders.user_id\n```\n\n> **Rule**: Shard theo data access pattern, không phải random!"
     },
     {
-      "id": 36,
+      "id": 37,
       "type": "quiz",
       "quizId": "q8",
       "title": "🎯 Quiz: Sharding",
@@ -335,42 +342,42 @@
       "explanation": "Shard theo user_id! Tất cả orders của 1 user nằm cùng shard → query nhanh, không cần cross-shard. Shard key phải match access pattern phổ biến nhất."
     },
     {
-      "id": 37,
+      "id": 38,
       "type": "article",
       "title": "Phase 8: Vertical Partitioning",
       "emoji": "📊",
       "content": "### Chia theo columns thay vì rows\n\n```mermaid\nflowchart LR\n    subgraph Before[\"❌ Trước\"]\n        T1[(\"users\\nid, name, email,\\navatar_blob (5MB),\\nbio, settings_json\")]\n    end\n    \n    subgraph After[\"✅ Sau\"]\n        T2[(\"users_core\\nid, name, email\")]\n        T3[(\"users_profile\\nuser_id, avatar_blob\")]\n        T4[(\"users_settings\\nuser_id, settings_json\")]\n    end\n```\n\n### Khi nào dùng?\n\n| Trường hợp | Giải pháp |\n|------------|----------|\n| Có BLOB columns lớn | Tách ra table riêng |\n| Columns có access pattern khác nhau | Hot/cold data separation |\n| Một số columns cần scale khác | Microservice-ready |"
     },
     {
-      "id": 38,
+      "id": 39,
       "type": "article",
       "title": "Phase 8: Tổng kết DB Scaling",
       "emoji": "📈",
       "content": "### Database Scaling Strategies:\n\n```mermaid\nflowchart TB\n    P[\"🤔 DB chậm?\"] --> R{\"READ hay WRITE?\"}\n    R -->|\"READ heavy\"| REP[\"📖 Replication\\n(Add Followers)\"]\n    R -->|\"WRITE heavy\"| SH[\"🔀 Sharding\\n(Split Data)\"]\n    R -->|\"Both\"| BOTH[\"Replication + Sharding\"]\n    \n    P --> S{\"Data quá lớn?\"}\n    S -->|\"Rows quá nhiều\"| HSH[\"Horizontal Sharding\"]\n    S -->|\"Columns quá nhiều\"| VSH[\"Vertical Partitioning\"]\n```\n\n### Thứ tự scale:\n\n1. **Indexing** - 90% cases đủ rồi!\n2. **Caching** - Giảm load xuống DB\n3. **Replication** - Scale reads\n4. **Sharding** - Scale writes (cuối cùng!)\n\n> **⚠️ Sharding là giải pháp CUỐI CÙNG, không phải đầu tiên!**"
     },
     {
-      "id": 39,
+      "id": 40,
       "type": "article",
       "title": "Phase 9: Khi Monolith quá lớn",
       "emoji": "🏢",
       "content": "### Từ Phase 0-8, ta đã có Monolith có thể scale:\n\n- ✅ Multiple instances + Load balanced\n- ✅ Stateless + Cached\n- ✅ DB replicated + Sharded + HA\n\n### Vấn đề mới (nếu có):\n\n| Triệu chứng | Mô tả |\n|-------------|-------|\n| 🐌 Deploy mất 1 giờ | Codebase quá lớn |\n| 👥 Teams đạp chân nhau | 50+ devs cùng repo |\n| 🔥 1 bug crash tất cả | Không isolate được |\n| 📊 Scale không đều | Payment cần 10x, User cần 1x |\n\n> *Đây là lúc **có thể** cân nhắc Microservices...*"
     },
     {
-      "id": 40,
+      "id": 41,
       "type": "article",
       "title": "Phase 9: Microservices",
       "emoji": "🧩",
       "content": "### Microservices là gì?\n\nTách monolith thành **nhiều services nhỏ**:\n- 🗄️ Database riêng\n- 🚀 Deploy độc lập\n- 📈 Scale riêng\n- 👥 Team riêng\n\n```mermaid\nflowchart TB\n    GW[\"🚪 API Gateway\"] --> US[\"👤 User Service\"]\n    GW --> PS[\"📦 Product Service\"]\n    GW --> OS[\"🛒 Order Service\"]\n    GW --> PY[\"💳 Payment Service\"]\n    \n    US --> DB1[(\"DB\")]\n    PS --> DB2[(\"DB\")]\n    OS --> DB3[(\"DB\")]\n    PY --> DB4[(\"DB\")]\n```"
     },
     {
-      "id": 41,
+      "id": 42,
       "type": "article",
       "title": "Phase 9: Cảnh báo!",
       "emoji": "🚨",
       "content": "### ⚠️ Microservices tăng complexity 10x!\n\n> *\"You're not Netflix. I'm not Netflix.\"* — Martin Joo\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người maintain |\n| ❌ Startup giai đoạn đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps maturity | K8s, monitoring phức tạp |\n| ❌ Monolith chưa gặp vấn đề | Đừng fix cái không hỏng! |\n\n### Problems phải giải quyết:\n\n- 🔗 Service-to-service communication\n- 📊 Distributed tracing\n- 🔄 Data consistency across services\n- 🐛 Debugging distributed systems"
     },
     {
-      "id": 42,
+      "id": 43,
       "type": "quiz",
       "quizId": "q9",
       "title": "🎯 Quiz: Microservices",
@@ -386,7 +393,7 @@
       "explanation": "Circuit breaker + caching! Microservices cần resilience: cache data cần thiết, graceful degradation khi downstream fail. Không bao giờ access DB của service khác trực tiếp!"
     },
     {
-      "id": 43,
+      "id": 44,
       "type": "quiz",
       "quizId": "q10",
       "title": "🎯 Final Quiz",
@@ -402,7 +409,7 @@
       "explanation": "YAGNI! (You Aren't Gonna Need It). Startup cần ship nhanh, validate idea. Monolith đơn giản dễ develop/debug/deploy. Chỉ tách khi thực sự có vấn đề về scale. 90% companies không cần microservices!"
     },
     {
-      "id": 44,
+      "id": 45,
       "type": "summary",
       "title": "Tổng kết System Design Journey",
       "emoji": "📝",
@@ -420,7 +427,7 @@
       ]
     },
     {
-      "id": 45,
+      "id": 46,
       "type": "leaderboard",
       "title": "🏆 System Design Champions",
       "emoji": "🏆",
@@ -429,70 +436,70 @@
   ],
   "quizzes": [
     {
-      "slideId": 7,
+      "slideId": 8,
       "question": "E-commerce app gửi email order confirmation. Nếu email service down 30 phút, hệ thống nên xử lý thế nào?",
       "options": ["Trả lỗi 500 cho user, không cho đặt hàng", "Queue job và retry, user vẫn đặt hàng được, email gửi sau", "Bỏ qua việc gửi email luôn", "Chờ email service up mới cho đặt hàng"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 11,
+      "slideId": 12,
       "question": "Black Friday: orders tăng 10x, mỗi order cần generate PDF invoice (CPU intensive). Setup nào tốt nhất?",
       "options": ["Tăng RAM cho API server", "Giữ nguyên 1 API server, thêm 5 worker servers", "Tăng cả API và Worker trên cùng 1 server mạnh", "Tắt bớt features để giảm load"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 16,
+      "slideId": 17,
       "question": "App có 3 servers: A (4 cores), B (8 cores), C (4 cores). Dùng Round Robin, server nào sẽ bị quá tải trước?",
       "options": ["Server B vì mạnh nhất nên nhận nhiều requests hơn", "Server A hoặc C vì yếu hơn nhưng nhận traffic bằng B", "Không server nào, Round Robin tự cân bằng", "Tất cả quá tải cùng lúc"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 19,
+      "slideId": 20,
       "question": "App dùng JWT stored trong httpOnly cookie. Khi horizontal scale, cần chuyển gì ra external storage?",
       "options": ["JWT tokens - phải lưu vào Redis", "Không cần chuyển gì, JWT là stateless", "User passwords", "Database connections"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 23,
+      "slideId": 24,
       "question": "Cache của homepage (hot data) expire lúc 12:00. Đúng 12:00 có 10,000 requests đồng thời. Chuyện gì xảy ra?",
       "options": ["Redis tự động extend TTL", "10,000 requests cùng query DB và cùng set cache → DB crash!", "Load balancer tự động block requests", "Chỉ 1 request query DB, 9,999 requests chờ"],
       "correctOption": 1,
       "timeLimit": 25
     },
     {
-      "slideId": 27,
+      "slideId": 28,
       "question": "Deploy code mới, nhưng users vẫn thấy UI cũ dù đã refresh. CDN cache TTL là 1 năm. Cách fix nhanh nhất?",
       "options": ["Chờ 1 năm để cache expire", "Yêu cầu users clear browser cache", "Purge CDN cache hoặc dùng versioned filenames", "Tắt CDN đi"],
       "correctOption": 2,
       "timeLimit": 20
     },
     {
-      "slideId": 31,
+      "slideId": 32,
       "question": "E-commerce: User đặt hàng (WRITE), sau đó xem order history (READ từ follower). Follower có lag 2 giây. User thấy gì?",
       "options": ["Order mới hiện ngay lập tức", "Order mới có thể không hiện trong 2 giây đầu", "Order bị mất vĩnh viễn", "Hệ thống báo lỗi"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 36,
+      "slideId": 37,
       "question": "E-commerce: 100M users, 500M orders. Muốn query 'tất cả orders của 1 user' nhanh nhất. Shard key nào tốt nhất?",
       "options": ["order_id - vì orders nhiều hơn", "user_id - vì query theo user", "created_at - vì hay sort theo thời gian", "product_id - vì hay filter theo product"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 42,
+      "slideId": 43,
       "question": "Order Service cần data từ User Service và Product Service. Cả 2 services đều down. Order Service nên làm gì?",
       "options": ["Crash luôn và báo lỗi 500", "Cache data từ các services khác, dùng cached data khi downstream down", "Chờ đến khi services khác up", "Gọi trực tiếp vào database của User/Product Service"],
       "correctOption": 1,
       "timeLimit": 25
     },
     {
-      "slideId": 43,
+      "slideId": 44,
       "question": "Startup 5 devs, MVP giai đoạn đầu, chưa có users. CTO muốn dùng K8s + microservices + Kafka từ ngày 1. Bạn sẽ nói gì?",
       "options": ["Đồng ý, chuẩn bị cho scale từ đầu là tốt", "Phản đối, start với monolith đơn giản, thêm complexity khi cần", "Đề xuất dùng serverless thay vì K8s", "Đồng ý nhưng bỏ Kafka"],
       "correctOption": 1,

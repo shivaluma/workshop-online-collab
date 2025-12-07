@@ -17,21 +17,28 @@ export const systemDesign101Notes: Record<number, string> = {
 - Quote: "System design is one of the things that differentiate a senior from a junior"
 - 💡 **Tip**: Không cần là Netflix mới cần system design`,
 
-  // Slide 2: Phase 0 - Basic
-  2: `- Đây là kiến trúc cơ bản nhất mà ai cũng bắt đầu
+  // Slide 2: Performance vs Scalability
+  2: `- **Phân biệt 2 loại vấn đề:**
+  - Performance: Chậm với 1 user → Fix code/query
+  - Scalability: Nhanh với 1 user, chậm với 1000 → Cần architecture
+- Workshop này focus vào **Scalability**
+- 💡 Hỏi: "App của bạn có vấn đề gì? Performance hay Scalability?"`,
+
+  // Slide 3: Phase 0 - Basic
+  3: `- Đây là kiến trúc cơ bản nhất mà ai cũng bắt đầu
 - Frontend → API → Database
 - **Ưu điểm**: Đơn giản, dễ setup, deploy nhanh
 - **Nhược điểm**: Không scale được
 - ⚠️ Phù hợp cho: MVP, internal tools, side projects
 - Hỏi: "App hiện tại của bạn đang ở phase nào?"`,
 
-  // Slide 3: Quiz Phase 0
-  3: `- Câu hỏi warm-up đơn giản
-- Đáp án: Startup nhỏ, vài chục users
-- Giải thích: Phase 0 chỉ phù hợp traffic thấp`,
+  // Slide 4: Phase 0 - Vấn đề xuất hiện
+  4: `- Câu hỏi warm-up đơn giản
+- Tasks chạy lâu → Block API
+- Ví dụ: Upload ảnh, gửi email`,
 
-  // Slide 4: Phase 1 - Job Queue
-  4: `- **Khi nào cần?** Tasks chạy lâu hơn 200-300ms
+  // Slide 5: Phase 1 - Job Queue
+  5: `- **Khi nào cần?** Tasks chạy lâu hơn 200-300ms
 - Ví dụ thực tế:
   - Upload ảnh → Resize trong nền
   - Gửi email/OTP
@@ -39,8 +46,8 @@ export const systemDesign101Notes: Record<number, string> = {
 - **Lợi ích**: User không phải chờ!
 - 💡 Queue có thể dùng: Redis (phổ biến), RabbitMQ, Kafka, hoặc DB table`,
 
-  // Slide 5: Job Queue giải thích
-  5: `- Giải thích đơn giản cho người mới:
+  // Slide 6: Job Queue giải thích
+  6: `- Giải thích đơn giản cho người mới:
 - API = Nhân viên tiếp tân (nhanh)
 - Worker = Nhân viên kho (làm việc nặng)
 - Queue = Danh sách công việc chờ xử lý
@@ -48,38 +55,27 @@ export const systemDesign101Notes: Record<number, string> = {
   - Không queue: Chờ 30 giây
   - Có queue: "Upload OK!" ngay lập tức`,
 
-  // Slide 6: Quiz Job Queue
-  6: `- Đáp án: "Để API không bị chậm hoặc timeout"
-- Giải thích thêm: Long-running tasks block user requests
-- ⚠️ Nếu API bị block → User experience tệ`,
-
   // Slide 7: Retry & Dead Letter Queue
   7: `- **Job có thể FAIL!** → Cần retry mechanism
 - Retry thường 3-5 lần với exponential backoff
 - Dead Letter Queue (DLQ):
   - Job fail quá nhiều → Chuyển vào DLQ
-  - Admin review và xử lý thủ công
+  - Admin review và xử lý thủ công`,
+
+  // Slide 8: Quiz Job Queue
+  8: `- Đáp án: "Queue job và retry"
+- Job queue cho phép decouple
+- User đặt hàng thành công, email gửi sau
 - 💡 Đây là best practice trong production`,
 
-  // Slide 8: Quiz Retry
-  8: `- Đáp án: "Chuyển vào Dead-letter Queue"
-- Giải thích: Retry mãi mãi = nghẽn queue
-- DLQ giúp isolate failed jobs để debug sau`,
-
-  // Slide 9: Phase 1 Tradeoffs
+  // Slide 9: Phase 1 Setup
   9: `- Setup đơn giản: 1 server chạy 2 processes
-- **Ưu điểm**: 
-  - Không block user requests
-  - Setup cực kỳ đơn giản
-- **Nhược điểm**: 
-  - Worker vẫn chiếm resources của API
-  - Video transcoding → Homepage chậm!
-- ⚠️ Chỉ phù hợp: Vài chục jobs nhẹ mỗi ngày`,
+- Đủ cho vài chục jobs mỗi ngày`,
 
-  // Slide 10: Quiz Worker Resources
-  10: `- Đáp án: "API bị chậm"
-- Giải thích: CPU/RAM bị worker chiếm
-- Hỏi: "Ai đã gặp case này chưa?"`,
+  // Slide 10: Phase 1 → 2 Vấn đề
+  10: `- Worker và API chạy chung máy = share resources
+- Video transcoding → Homepage chậm!
+- ⚠️ Tổng cần 110% CPU = không đủ!`,
 
   // Slide 11: Phase 2 - Tách Worker
   11: `- **Giải pháp**: Tách API và Worker ra máy riêng
