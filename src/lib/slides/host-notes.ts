@@ -236,66 +236,101 @@ export const systemDesign101Notes: Record<number, string> = {
   - Sticky session
 - DigitalOcean: 3 nodes = $60/month`,
 
-  // Slide 33: Quiz DB Replicas
-  33: `- Đáp án: "Chỉ READ operations"
-- Tất cả WRITE đi qua Leader để đảm bảo consistency`,
+  // Slide 33: Sharding - Khi 1 DB không đủ
+  33: `- **Replication giải quyết READ, nhưng WRITE thì sao?**
+- Replication: Mỗi node là full copy → Data quá lớn = vấn đề
+- Khi nào cần Sharding:
+  - Data > 1TB
+  - Write-heavy workload (10K+ writes/sec)
+  - Geo-distributed users
+- 💡 Sharding = Chia data ra nhiều databases`,
 
-  // Slide 34: SPOF
-  34: `- **SPOF** = Single Point of Failure
-- Nếu component này chết → Cả hệ thống chết!
-- Checklist:
-  - API: Multiple servers + LB ✅
-  - Database: Leader-Follower ⚠️
-  - Queue: Redis Cluster ⚠️
-- DigitalOcean LB: 10,000 connections = $12/month`,
+  // Slide 34: Sharding Strategies
+  34: `- **Horizontal Partitioning** = Chia rows ra nhiều shards
+- Shard Key Strategies:
+  - **Range**: user_id 1-1M, 1M-2M... (dễ nhưng hay bị hot spots)
+  - **Hash**: hash(user_id) % N (phân bố đều)
+  - **Geo**: region='VN' → shard VN
+- ⚠️ Chọn shard key SAI = performance nightmare`,
 
-  // Slide 35: Quiz SPOF
-  35: `- Đáp án: "Toàn bộ hệ thống không hoạt động"
-- Database là SPOF phổ biến nhất`,
+  // Slide 35: Sharding Challenges
+  35: `- ⚠️ **Sharding KHÔNG miễn phí!**
+- Challenges:
+  - Cross-shard queries: JOIN giữa shards = slow
+  - Resharding: Thêm shard = migrate TB data
+  - Global unique IDs: Auto-increment không work
+  - Aggregations: COUNT(*) cần query tất cả shards
+- 💡 **Rule**: Shard theo access pattern, không phải random`,
 
-  // Slide 36: Phase 9 - Microservices
-  36: `- Microservices = Tách thành nhiều services nhỏ
+  // Slide 36: Quiz Sharding
+  36: `- Đáp án: "user_id - vì query theo user"
+- Giải thích: Tất cả orders của 1 user cùng shard → nhanh
+- Shard key phải match access pattern phổ biến nhất`,
+
+  // Slide 37: Vertical Partitioning
+  37: `- Chia theo columns thay vì rows
+- Use cases:
+  - BLOB columns lớn (avatar 5MB) → table riêng
+  - Hot/cold data separation
+  - Microservice-ready (tách bảng trước khi tách service)
+- Đơn giản hơn horizontal sharding!`,
+
+  // Slide 38: Tổng kết DB Scaling
+  38: `- **Thứ tự scale Database:**
+  1. Indexing - 90% cases đủ rồi!
+  2. Caching - Giảm load xuống DB
+  3. Replication - Scale reads
+  4. Sharding - Scale writes (cuối cùng!)
+- ⚠️ **Sharding là giải pháp CUỐI CÙNG, không phải đầu tiên!**
+- Hỏi: "Ai đã dùng sharding chưa? Kinh nghiệm thế nào?"`,
+
+  // Slide 39: Phase 9 - Monolith quá lớn
+  39: `- Sau Phase 0-8, ta có Monolith có thể scale:
+  - Multiple instances + Load balanced ✅
+  - Stateless + Cached ✅
+  - DB replicated + Sharded ✅
+- Khi nào cần Microservices?
+  - Deploy mất 1 giờ
+  - 50+ devs đạp chân nhau
+  - 1 bug crash tất cả`,
+
+  // Slide 40: Phase 9 - Microservices
+  40: `- Microservices = Tách thành nhiều services nhỏ
 - Mỗi service:
   - Database riêng
   - Deploy độc lập
   - Scale riêng
   - Team riêng maintain`,
 
-  // Slide 37: Khi nào KHÔNG dùng
-  37: `- ⚠️ **CẢNH BÁO**: Complexity tăng 10x!
+  // Slide 41: Cảnh báo Microservices
+  41: `- ⚠️ **CẢNH BÁO**: Complexity tăng 10x!
 - KHÔNG dùng nếu:
-  - Team nhỏ (<5 devs)
+  - Team nhỏ (<10 devs)
   - Startup giai đoạn đầu
   - Chưa có DevOps experience
 - Quote: "You're not Netflix. I'm not Netflix."`,
 
-  // Slide 38: Khi nào NÊN dùng
-  38: `- NÊN dùng khi:
-  - Team lớn (50+ devs)
-  - Cần scale từng phần
-  - Có DevOps expertise
-  - Monolith quá lớn (>500k LOC)
-- **Start with monolith, extract when needed!**`,
+  // Slide 42: Quiz Microservices
+  42: `- Đáp án: "Cache data, dùng cached data khi downstream down"
+- Circuit breaker + caching = resilience
+- Không bao giờ access DB của service khác trực tiếp!`,
 
-  // Slide 39: Quiz Microservices
-  39: `- Đáp án: "Team nhỏ, chưa có DevOps experience"
-- Microservices = Complexity overhead`,
+  // Slide 43: Final Quiz
+  43: `- Đáp án: "Monolith đơn giản, tách sau khi cần"
+- 💡 **Key takeaway**: YAGNI - You Aren't Gonna Need It
+- 90% companies không cần microservices!`,
 
-  // Slide 40: Final Quiz
-  40: `- Đáp án: "Monolith đơn giản, tách sau khi cần"
-- 💡 **Key takeaway**: Start simple!
-- Chỉ optimize khi thực sự có vấn đề`,
-
-  // Slide 41: Summary
-  41: `- Tổng kết 10 phases:
+  // Slide 44: Summary
+  44: `- Tổng kết 10 phases:
   - Phase 0-4: Foundation (API, Queue, LB)
   - Phase 5-7: Optimization (Stateless, Cache, CDN)
-  - Phase 8-9: Advanced (DB Replicas, Microservices)
+  - Phase 8: DB Scaling (Replication + Sharding)
+  - Phase 9: Microservices (chỉ khi cần!)
 - **Remember**: Start simple, scale when needed
 - Hỏi: "Có câu hỏi gì không?"`,
 
-  // Slide 42: Leaderboard
-  42: `- Chuẩn bị reveal kết quả!
+  // Slide 45: Leaderboard
+  45: `- Chuẩn bị reveal kết quả!
 - Tạo không khí hào hứng
 - Cảm ơn mọi người đã tham gia
 - Share contact/resources nếu có`,
