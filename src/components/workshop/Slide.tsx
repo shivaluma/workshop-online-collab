@@ -6,6 +6,7 @@ import type { QuizStats, ScoreEntry } from "@/lib/ws/types";
 import { ArticleSlide } from "./slides/ArticleSlide";
 import { ContentSlide } from "./slides/ContentSlide";
 import { LeaderboardSlide } from "./slides/LeaderboardSlide";
+import { OrderingQuizSlide } from "./slides/OrderingQuizSlide";
 import { QuizSlide } from "./slides/QuizSlide";
 import { SummarySlide } from "./slides/SummarySlide";
 import { TitleSlide } from "./slides/TitleSlide";
@@ -73,6 +74,20 @@ export function Slide({
             answeredOption={answeredOption}
             answerCount={answerCount}
             quizResult={quizResult}
+          />
+        );
+      case "ordering-quiz":
+        return (
+          <OrderingQuizSlide
+            slide={slide}
+            isHost={isHost}
+            activeQuizId={activeQuizId}
+            quizTimeout={quizTimeout}
+            quizStartTime={quizStartTime}
+            onSubmitAnswer={onSubmitAnswer as ((answer: number[], timeTaken: number) => void) | undefined}
+            hasAnswered={hasAnswered}
+            answerCount={answerCount}
+            quizResult={quizResult as { correctOrder: number[]; stats: import("@/lib/ws/types").QuizStats } | null | undefined}
           />
         );
       case "summary":

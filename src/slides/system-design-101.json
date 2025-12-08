@@ -357,27 +357,44 @@
     },
     {
       "id": 40,
+      "type": "ordering-quiz",
+      "quizId": "q-order-1",
+      "title": "🎯 Quiz: Sắp xếp thứ tự Scale DB",
+      "emoji": "🔢",
+      "question": "Sắp xếp đúng thứ tự các bước scale database (từ đầu tiên đến cuối cùng):",
+      "items": [
+        "Indexing - Tối ưu queries",
+        "Caching - Giảm load DB",
+        "Replication - Scale reads",
+        "Sharding - Scale writes"
+      ],
+      "correctOrder": [0, 1, 2, 3],
+      "timeLimit": 30,
+      "explanation": "Thứ tự đúng: Indexing (90% đủ rồi!) → Caching → Replication → Sharding. Sharding là giải pháp CUỐI CÙNG vì complexity cao nhất!"
+    },
+    {
+      "id": 41,
       "type": "article",
       "title": "Phase 9: Khi Monolith quá lớn",
       "emoji": "🏢",
       "content": "### Từ Phase 0-8, ta đã có Monolith có thể scale:\n\n- ✅ Multiple instances + Load balanced\n- ✅ Stateless + Cached\n- ✅ DB replicated + Sharded + HA\n\n### Vấn đề mới (nếu có):\n\n| Triệu chứng | Mô tả |\n|-------------|-------|\n| 🐌 Deploy mất 1 giờ | Codebase quá lớn |\n| 👥 Teams đạp chân nhau | 50+ devs cùng repo |\n| 🔥 1 bug crash tất cả | Không isolate được |\n| 📊 Scale không đều | Payment cần 10x, User cần 1x |\n\n> *Đây là lúc **có thể** cân nhắc Microservices...*"
     },
     {
-      "id": 41,
+      "id": 42,
       "type": "article",
       "title": "Phase 9: Microservices",
       "emoji": "🧩",
       "content": "### Microservices là gì?\n\nTách monolith thành **nhiều services nhỏ**:\n- 🗄️ Database riêng\n- 🚀 Deploy độc lập\n- 📈 Scale riêng\n- 👥 Team riêng\n\n```mermaid\nflowchart TB\n    GW[\"🚪 API Gateway\"] --> US[\"👤 User Service\"]\n    GW --> PS[\"📦 Product Service\"]\n    GW --> OS[\"🛒 Order Service\"]\n    GW --> PY[\"💳 Payment Service\"]\n    \n    US --> DB1[(\"DB\")]\n    PS --> DB2[(\"DB\")]\n    OS --> DB3[(\"DB\")]\n    PY --> DB4[(\"DB\")]\n```"
     },
     {
-      "id": 42,
+      "id": 43,
       "type": "article",
       "title": "Phase 9: Cảnh báo!",
       "emoji": "🚨",
       "content": "### ⚠️ Microservices tăng complexity 10x!\n\n> *\"You're not Netflix. I'm not Netflix.\"* — Martin Joo\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người maintain |\n| ❌ Startup giai đoạn đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps maturity | K8s, monitoring phức tạp |\n| ❌ Monolith chưa gặp vấn đề | Đừng fix cái không hỏng! |\n\n### Problems phải giải quyết:\n\n- 🔗 Service-to-service communication\n- 📊 Distributed tracing\n- 🔄 Data consistency across services\n- 🐛 Debugging distributed systems"
     },
     {
-      "id": 43,
+      "id": 44,
       "type": "quiz",
       "quizId": "q9",
       "title": "🎯 Quiz: Microservices",
@@ -393,7 +410,7 @@
       "explanation": "Circuit breaker + caching! Microservices cần resilience: cache data cần thiết, graceful degradation khi downstream fail. Không bao giờ access DB của service khác trực tiếp!"
     },
     {
-      "id": 44,
+      "id": 45,
       "type": "quiz",
       "quizId": "q10",
       "title": "🎯 Final Quiz",
@@ -409,7 +426,7 @@
       "explanation": "YAGNI! (You Aren't Gonna Need It). Startup cần ship nhanh, validate idea. Monolith đơn giản dễ develop/debug/deploy. Chỉ tách khi thực sự có vấn đề về scale. 90% companies không cần microservices!"
     },
     {
-      "id": 45,
+      "id": 46,
       "type": "summary",
       "title": "Tổng kết System Design Journey",
       "emoji": "📝",
@@ -427,7 +444,7 @@
       ]
     },
     {
-      "id": 46,
+      "id": 47,
       "type": "leaderboard",
       "title": "🏆 System Design Champions",
       "emoji": "🏆",
@@ -492,14 +509,14 @@
       "timeLimit": 20
     },
     {
-      "slideId": 43,
+      "slideId": 44,
       "question": "Order Service cần data từ User Service và Product Service. Cả 2 services đều down. Order Service nên làm gì?",
       "options": ["Crash luôn và báo lỗi 500", "Cache data từ các services khác, dùng cached data khi downstream down", "Chờ đến khi services khác up", "Gọi trực tiếp vào database của User/Product Service"],
       "correctOption": 1,
       "timeLimit": 25
     },
     {
-      "slideId": 44,
+      "slideId": 45,
       "question": "Startup 5 devs, MVP giai đoạn đầu, chưa có users. CTO muốn dùng K8s + microservices + Kafka từ ngày 1. Bạn sẽ nói gì?",
       "options": ["Đồng ý, chuẩn bị cho scale từ đầu là tốt", "Phản đối, start với monolith đơn giản, thêm complexity khi cần", "Đề xuất dùng serverless thay vì K8s", "Đồng ý nhưng bỏ Kafka"],
       "correctOption": 1,

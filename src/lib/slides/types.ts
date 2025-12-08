@@ -65,6 +65,16 @@ export interface QuizSlide extends SlideBase {
   explanation?: string;
 }
 
+export interface OrderingQuizSlide extends SlideBase {
+  type: "ordering-quiz";
+  quizId: string;
+  question: string;
+  items: string[]; // Items to be ordered (shown shuffled)
+  correctOrder: number[]; // Correct order indices [0, 1, 2, 3] means items[0] first, etc.
+  timeLimit: number;
+  explanation?: string;
+}
+
 export interface SummarySlide extends SlideBase {
   type: "summary";
   points: string[];
@@ -75,7 +85,7 @@ export interface LeaderboardSlide extends SlideBase {
   description?: string;
 }
 
-export type Slide = TitleSlide | ContentSlide | ArticleSlide | VisualSlide | QuizSlide | SummarySlide | LeaderboardSlide;
+export type Slide = TitleSlide | ContentSlide | ArticleSlide | VisualSlide | QuizSlide | OrderingQuizSlide | SummarySlide | LeaderboardSlide;
 
 export interface QuizData {
   slideId: number;
