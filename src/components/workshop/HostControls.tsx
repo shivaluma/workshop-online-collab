@@ -171,7 +171,7 @@ export function HostControls({
             {/* Participant count with hover card */}
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <button className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 rounded-full px-4 py-1.5 transition-colors cursor-pointer">
+                <button type="button" className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 rounded-full px-4 py-1.5 transition-colors cursor-pointer">
                   <Users className="w-4 h-4 text-violet-400" />
                   <span className="font-mono text-sm">{activeParticipants.length}</span>
                 </button>
