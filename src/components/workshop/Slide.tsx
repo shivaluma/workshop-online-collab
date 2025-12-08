@@ -22,9 +22,10 @@ interface SlideProps {
   quizOptions?: string[];
   quizTimeout?: number;
   quizStartTime?: number;
-  onSubmitAnswer?: (answer: number, timeTaken: number) => void;
+  onSubmitAnswer?: (answer: number | number[], timeTaken: number) => void;
   hasAnswered?: boolean;
   answeredOption?: number;
+  answeredOrder?: number[];
   answerCount?: { count: number; total: number };
   quizResult?: { correct: number | number[]; stats: QuizStats; quizType?: string } | null;
   // Scoreboard props
@@ -44,6 +45,7 @@ export function Slide({
   onSubmitAnswer,
   hasAnswered,
   answeredOption,
+  answeredOrder,
   answerCount,
   quizResult,
   scores,
@@ -59,7 +61,11 @@ export function Slide({
         return <ArticleSlide slide={slide} />;
       case "visual":
         return <VisualSlide slide={slide} />;
-      case "quiz":
+      case "quiz": {
+        // Transform quizResult for choice quiz component
+        const choiceQuizResult = quizResult && quizResult.quizType !== "ORDERING"
+          ? { correct: quizResult.correct as number, stats: quizResult.stats }
+          : null;
         return (
           <QuizSlide
             slide={slide}
@@ -69,13 +75,14 @@ export function Slide({
             quizOptions={quizOptions}
             quizTimeout={quizTimeout}
             quizStartTime={quizStartTime}
-            onSubmitAnswer={onSubmitAnswer}
+            onSubmitAnswer={onSubmitAnswer as ((answer: number, timeTaken: number) => void) | undefined}
             hasAnswered={hasAnswered}
             answeredOption={answeredOption}
             answerCount={answerCount}
-            quizResult={quizResult}
+            quizResult={choiceQuizResult}
           />
         );
+      }
       case "ordering-quiz": {
         // Transform quizResult for ordering quiz component
         const orderingQuizResult = quizResult && quizResult.quizType === "ORDERING" 
@@ -90,6 +97,7 @@ export function Slide({
             quizStartTime={quizStartTime}
             onSubmitAnswer={onSubmitAnswer as ((answer: number[], timeTaken: number) => void) | undefined}
             hasAnswered={hasAnswered}
+            answeredOrder={answeredOrder}
             answerCount={answerCount}
             quizResult={orderingQuizResult}
           />

@@ -47,6 +47,7 @@ export default function ParticipantPage({
   const [quizStartTime, setQuizStartTime] = useState<number | undefined>();
   const [hasAnswered, setHasAnswered] = useState(false);
   const [answeredOption, setAnsweredOption] = useState<number | undefined>();
+  const [answeredOrder, setAnsweredOrder] = useState<number[] | undefined>();
   const [quizResult, setQuizResult] = useState<{
     correct: number | number[];
     stats: QuizStats;
@@ -168,6 +169,7 @@ export default function ParticipantPage({
     setQuizResult(null);
     setHasAnswered(false);
     setAnsweredOption(undefined);
+    setAnsweredOrder(undefined);
     setShowLeaderboard(false);
   }, []);
 
@@ -180,6 +182,7 @@ export default function ParticipantPage({
       setQuizStartTime(Date.now());
       setHasAnswered(false);
       setAnsweredOption(undefined);
+      setAnsweredOrder(undefined);
       setQuizResult(null);
     },
     [],
@@ -224,13 +227,17 @@ export default function ParticipantPage({
     onError: handleError,
   });
 
-  // Handle answer submission
+  // Handle answer submission (supports both number for choice quiz and number[] for ordering quiz)
   const handleSubmitAnswer = useCallback(
-    (answer: number, timeTaken: number) => {
+    (answer: number | number[], timeTaken: number) => {
       if (!activeQuizId || hasAnswered) return;
 
       setHasAnswered(true);
-      setAnsweredOption(answer);
+      if (Array.isArray(answer)) {
+        setAnsweredOrder(answer);
+      } else {
+        setAnsweredOption(answer);
+      }
       submitAnswer(activeQuizId, answer, timeTaken);
     },
     [activeQuizId, hasAnswered, submitAnswer],
@@ -331,6 +338,7 @@ export default function ParticipantPage({
           onSubmitAnswer={handleSubmitAnswer}
           hasAnswered={hasAnswered}
           answeredOption={answeredOption}
+          answeredOrder={answeredOrder}
           quizResult={quizResult}
           scores={scores}
           showLeaderboard={showLeaderboard}

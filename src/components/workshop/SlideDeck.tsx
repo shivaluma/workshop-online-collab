@@ -14,9 +14,10 @@ interface SlideDeckProps {
   quizOptions?: string[];
   quizTimeout?: number;
   quizStartTime?: number;
-  onSubmitAnswer?: (answer: number, timeTaken: number) => void;
+  onSubmitAnswer?: (answer: number | number[], timeTaken: number) => void;
   hasAnswered?: boolean;
   answeredOption?: number;
+  answeredOrder?: number[];
   answerCount?: { count: number; total: number };
   quizResult?: {
     correct: number | number[];
@@ -40,6 +41,7 @@ export function SlideDeck({
   onSubmitAnswer,
   hasAnswered,
   answeredOption,
+  answeredOrder,
   answerCount,
   quizResult,
   scores,
@@ -69,6 +71,7 @@ export function SlideDeck({
         onSubmitAnswer={onSubmitAnswer}
         hasAnswered={hasAnswered}
         answeredOption={answeredOption}
+        answeredOrder={answeredOrder}
         answerCount={answerCount}
         quizResult={quizResult}
         scores={scores}
