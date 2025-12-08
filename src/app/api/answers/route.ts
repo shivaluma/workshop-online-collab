@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 // Submit an answer (backup HTTP endpoint, WebSocket is preferred)
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (!participantId || !quizId || answer === undefined || !timeTaken) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,21 +24,18 @@ export async function POST(request: NextRequest) {
     if (!participant) {
       return NextResponse.json(
         { error: "Participant not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (!quiz) {
-      return NextResponse.json(
-        { error: "Quiz not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
     if (quiz.status !== "ACTIVE") {
       return NextResponse.json(
         { error: "Quiz is not active" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,14 +47,21 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingAnswer) {
-      return NextResponse.json(
-        { error: "Already answered" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Already answered" }, { status: 400 });
     }
 
-    const isCorrect = answer === quiz.correctOption;
-    
+    // Determine if answer is correct based on quiz type
+    let isCorrect = false;
+    if (quiz.quizType === "ORDERING") {
+      // For ordering quiz, answer is an array of indices
+      const userOrder = Array.isArray(answer) ? answer : [];
+      const correctOrder = quiz.correctOrder;
+      isCorrect = JSON.stringify(userOrder) === JSON.stringify(correctOrder);
+    } else {
+      // For choice quiz, answer is a single number
+      isCorrect = answer === quiz.correctOption;
+    }
+
     // Calculate points: 1000 max, decreases linearly to 100 min over time
     let points = 0;
     if (isCorrect) {
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
         data: {
           participantId,
           quizId,
-          answer,
+          answer, // Json field can store both Int and Int[]
           isCorrect,
           timeTaken,
           points,
@@ -99,8 +103,7 @@ export async function POST(request: NextRequest) {
     console.error("Error submitting answer:", error);
     return NextResponse.json(
       { error: "Failed to submit answer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

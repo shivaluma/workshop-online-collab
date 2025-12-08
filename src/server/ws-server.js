@@ -196,15 +196,23 @@ async function handleStartQuiz(ws, clientId, data) {
       data: { status: "QUIZ_ACTIVE" },
     });
 
-    broadcast(roomId, {
+    const message = {
       type: "quiz_started",
       quizId: quiz.id,
       question: quiz.question,
-      options: quiz.options,
+      quizType: quiz.quizType,
+      options: quiz.options, // items for ordering, options for choice
       timeout: quiz.timeLimit,
-    });
+    };
 
-    console.log(`Room ${roomId}: Quiz ${quizId} started`);
+    // Add correctOrder for ordering quizzes (needed for result validation)
+    if (quiz.quizType === "ORDERING") {
+      message.correctOrder = quiz.correctOrder;
+    }
+
+    broadcast(roomId, message);
+
+    console.log(`Room ${roomId}: Quiz ${quizId} (${quiz.quizType}) started`);
   } catch (error) {
     console.error("Error starting quiz:", error);
   }
@@ -235,7 +243,17 @@ async function handleSubmitAnswer(ws, clientId, data) {
       return;
     }
 
-    const isCorrect = answer === quiz.correctOption;
+    // Determine if answer is correct based on quiz type
+    let isCorrect = false;
+    if (quiz.quizType === "ORDERING") {
+      // For ordering quiz, answer is an array of indices
+      const userOrder = Array.isArray(answer) ? answer : [];
+      const correctOrder = quiz.correctOrder;
+      isCorrect = JSON.stringify(userOrder) === JSON.stringify(correctOrder);
+    } else {
+      // For choice quiz, answer is a single number
+      isCorrect = answer === quiz.correctOption;
+    }
     
     // Calculate points: 1000 max, decreases linearly to 0 over time
     // Score = (timeRemaining / totalTime) * 1000
@@ -247,7 +265,7 @@ async function handleSubmitAnswer(ws, clientId, data) {
       points = Math.max(100, points);
     }
 
-    // Save answer
+    // Save answer (Json field can store both Int and Int[])
     await prisma.answer.create({
       data: {
         participantId,
@@ -283,7 +301,7 @@ async function handleSubmitAnswer(ws, clientId, data) {
     // Confirm to participant
     sendTo(ws, { type: "answer_submitted", participantId, quizId });
 
-    console.log(`Room ${roomId}: Participant ${participantId} answered quiz ${quizId}`);
+    console.log(`Room ${roomId}: Participant ${participantId} answered quiz ${quizId} (${quiz.quizType})`);
   } catch (error) {
     console.error("Error submitting answer:", error);
     sendTo(ws, { type: "error", message: "Failed to submit answer" });
@@ -315,9 +333,17 @@ async function handleEndQuiz(ws, clientId, data) {
       include: { participant: true },
     });
 
-    const optionCounts = quiz.options.map((_, i) => 
-      answers.filter(a => a.answer === i).length
-    );
+    // Calculate option counts based on quiz type
+    let optionCounts = [];
+    if (quiz.quizType === "ORDERING") {
+      // For ordering quiz, we don't show option counts (not applicable)
+      optionCounts = [];
+    } else {
+      // For choice quiz, count answers per option
+      optionCounts = quiz.options.map((_, i) => 
+        answers.filter(a => a.answer === i).length
+      );
+    }
 
     const correctAnswers = answers.filter(a => a.isCorrect);
     const times = answers.map(a => a.timeTaken);
@@ -341,15 +367,24 @@ async function handleEndQuiz(ws, clientId, data) {
 
     // Small delay before showing results
     setTimeout(() => {
-      broadcast(roomId, {
+      const resultMessage = {
         type: "quiz_result",
         quizId,
-        correct: quiz.correctOption,
+        quizType: quiz.quizType,
         stats,
-      });
+      };
+
+      // Add correct answer based on quiz type
+      if (quiz.quizType === "ORDERING") {
+        resultMessage.correctOrder = quiz.correctOrder;
+      } else {
+        resultMessage.correct = quiz.correctOption;
+      }
+
+      broadcast(roomId, resultMessage);
     }, 500);
 
-    console.log(`Room ${roomId}: Quiz ${quizId} ended`);
+    console.log(`Room ${roomId}: Quiz ${quizId} (${quiz.quizType}) ended`);
   } catch (error) {
     console.error("Error ending quiz:", error);
   }

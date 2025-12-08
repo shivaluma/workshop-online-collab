@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { Check, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { use, useCallback, useEffect, useState } from "react";
+import { Toaster, toast } from "sonner";
+import { HostControls, SlideDeck } from "@/components/workshop";
+import { HostNotes } from "@/components/workshop/HostNotes";
 import { slideDeck as defaultSlideDeck, getPreset } from "@/lib/slides";
 import { getHostNotes } from "@/lib/slides/host-notes";
-import { useWebSocket } from "@/lib/ws";
-import type { ScoreEntry, QuizStats, ParticipantInfo } from "@/lib/ws/types";
 import type { SlideDeck as SlideDeckType } from "@/lib/slides/types";
-import { SlideDeck, HostControls } from "@/components/workshop";
-import { HostNotes } from "@/components/workshop/HostNotes";
-import { toast, Toaster } from "sonner";
-import { Copy, Check } from "lucide-react";
+import { useWebSocket } from "@/lib/ws";
+import type { ParticipantInfo, QuizStats, ScoreEntry } from "@/lib/ws/types";
 
 interface Quiz {
   id: string;
@@ -20,7 +20,9 @@ interface Quiz {
 
 export default function HostPage({
   params,
-}: { params: Promise<{ roomId: string }> }) {
+}: {
+  params: Promise<{ roomId: string }>;
+}) {
   const { roomId } = use(params);
   const router = useRouter();
 
@@ -35,7 +37,7 @@ export default function HostPage({
 
   // Slide deck (loaded from localStorage or default)
   const [slideDeckData, setSlideDeckData] = useState<SlideDeckType | null>(
-    null
+    null,
   );
   const [slidePreset, setSlidePreset] = useState<string | null>(null);
 
@@ -68,7 +70,7 @@ export default function HostPage({
           body: JSON.stringify({ hostSecret: secret }),
         });
         const verifyData = await verifyRes.json();
-        
+
         if (!verifyData.valid) {
           toast.error("Thông tin host không hợp lệ");
           router.push("/");
@@ -82,7 +84,7 @@ export default function HostPage({
         // Load slides from room data
         let slides: SlideDeckType | null = null;
         let preset: string | null = null;
-        
+
         if (roomData.customSlides) {
           // Custom uploaded slides
           slides = roomData.customSlides as SlideDeckType;
@@ -94,7 +96,7 @@ export default function HostPage({
             slides = presetData;
           }
         }
-        
+
         // Fallback to default
         if (!slides) {
           slides = defaultSlideDeck;
@@ -103,7 +105,7 @@ export default function HostPage({
         setSlideDeckData(slides);
         setSlidePreset(preset);
         setHostSecret(secret);
-        
+
         // Initialize quizzes
         initializeQuizzes(secret, slides);
       } catch (error) {
@@ -120,16 +122,50 @@ export default function HostPage({
 
   // Initialize quizzes in database
   const initializeQuizzes = async (secret: string, slides: SlideDeckType) => {
-    if (!slides?.quizzes) return;
-
     try {
-      const quizzesData = slides.quizzes.map((q) => ({
-        slideId: q.slideId,
-        question: q.question,
-        options: q.options,
-        correctOption: q.correctOption,
-        timeLimit: q.timeLimit,
-      }));
+      // Collect all quizzes: from quizzes array + ordering quizzes from slides
+      const quizzesData: Array<{
+        slideId: number;
+        question: string;
+        quizType: "CHOICE" | "ORDERING";
+        options?: string[];
+        items?: string[];
+        correctOption?: number;
+        correctOrder?: number[];
+        timeLimit: number;
+      }> = [];
+
+      // Add regular quizzes from quizzes array
+      if (slides?.quizzes) {
+        for (const q of slides.quizzes) {
+          quizzesData.push({
+            slideId: q.slideId,
+            question: q.question,
+            quizType: "CHOICE",
+            options: q.options,
+            correctOption: q.correctOption,
+            timeLimit: q.timeLimit,
+          });
+        }
+      }
+
+      // Add ordering quizzes from slides
+      if (slides?.slides) {
+        for (const slide of slides.slides) {
+          if (slide.type === "ordering-quiz") {
+            quizzesData.push({
+              slideId: slide.id,
+              question: slide.question,
+              quizType: "ORDERING",
+              items: slide.items,
+              correctOrder: slide.correctOrder,
+              timeLimit: slide.timeLimit,
+            });
+          }
+        }
+      }
+
+      if (quizzesData.length === 0) return;
 
       const res = await fetch(`/api/rooms/${roomId}/quizzes/bulk`, {
         method: "POST",
@@ -160,7 +196,7 @@ export default function HostPage({
       setCurrentSlide(state.currentSlide);
       setParticipants(state.participants);
     },
-    []
+    [],
   );
 
   const handleSlideChange = useCallback((index: number) => {
@@ -178,18 +214,18 @@ export default function HostPage({
         const existing = prev.find((p) => p.id === id);
         if (existing) {
           return prev.map((p) =>
-            p.id === id ? { ...p, isActive: true, score } : p
+            p.id === id ? { ...p, isActive: true, score } : p,
           );
         }
         return [...prev, { id, name, score, isActive: true }];
       });
     },
-    []
+    [],
   );
 
   const handleParticipantLeave = useCallback((id: string, count: number) => {
     setParticipants((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, isActive: false } : p))
+      prev.map((p) => (p.id === id ? { ...p, isActive: false } : p)),
     );
   }, []);
 
@@ -199,7 +235,7 @@ export default function HostPage({
         setAnswerCount({ count, total });
       }
     },
-    [activeQuizId]
+    [activeQuizId],
   );
 
   const handleQuizResult = useCallback(
@@ -207,10 +243,10 @@ export default function HostPage({
       setQuizResult({ correct, stats });
       setActiveQuizId(null);
       setQuizzes((prev) =>
-        prev.map((q) => (q.id === quizId ? { ...q, status: "COMPLETED" } : q))
+        prev.map((q) => (q.id === quizId ? { ...q, status: "COMPLETED" } : q)),
       );
     },
-    []
+    [],
   );
 
   const handleScoreboardUpdate = useCallback((newScores: ScoreEntry[]) => {
@@ -271,14 +307,14 @@ export default function HostPage({
       });
       startQuiz(quizId);
     },
-    [startQuiz, participants]
+    [startQuiz, participants],
   );
 
   const handleEndQuiz = useCallback(
     (quizId: string) => {
       endQuiz(quizId);
     },
-    [endQuiz]
+    [endQuiz],
   );
 
   const handleRevealScoreboard = useCallback(() => {
@@ -331,8 +367,12 @@ export default function HostPage({
             onClick={copyRoomCode}
             className="flex items-center gap-1 md:gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg px-2 md:px-3 py-1 md:py-1.5 transition-colors shrink-0"
           >
-            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">Mã phòng:</span>
-            <span className="font-mono font-bold text-xs md:text-sm text-violet-400">{roomId}</span>
+            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">
+              Mã phòng:
+            </span>
+            <span className="font-mono font-bold text-xs md:text-sm text-violet-400">
+              {roomId}
+            </span>
             {copied ? (
               <Check className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" />
             ) : (

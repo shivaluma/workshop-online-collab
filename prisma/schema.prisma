@@ -39,17 +39,19 @@ model Participant {
 }
 
 model Quiz {
-  id            String   @id @default(cuid())
-  roomId        String   @map("room_id")
-  slideId       Int      @map("slide_id")
+  id            String     @id @default(cuid())
+  roomId        String     @map("room_id")
+  slideId       Int        @map("slide_id")
   question      String
-  options       String[] // Array of options
-  correctOption Int      @map("correct_option")
-  timeLimit     Int      @default(20) @map("time_limit") // seconds
+  quizType      QuizType   @default(CHOICE) @map("quiz_type")
+  options       String[]   // Array of options (for CHOICE) or items (for ORDERING)
+  correctOption Int        @default(0) @map("correct_option") // For CHOICE type
+  correctOrder  Int[]      @map("correct_order") // For ORDERING type
+  timeLimit     Int        @default(20) @map("time_limit") // seconds
   status        QuizStatus @default(PENDING)
-  startedAt     DateTime? @map("started_at")
-  endedAt       DateTime? @map("ended_at")
-  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  startedAt     DateTime?  @map("started_at")
+  endedAt       DateTime?  @map("ended_at")
+  room          Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
   answers       Answer[]
 
   @@index([roomId])
@@ -60,7 +62,7 @@ model Answer {
   id            String      @id @default(cuid())
   participantId String      @map("participant_id")
   quizId        String      @map("quiz_id")
-  answer        Int         // Index of selected option
+  answer        Json        // Int for CHOICE, Int[] for ORDERING
   isCorrect     Boolean     @map("is_correct")
   timeTaken     Int         @map("time_taken") // milliseconds
   points        Int         @default(0)
@@ -84,5 +86,10 @@ enum QuizStatus {
   PENDING
   ACTIVE
   COMPLETED
+}
+
+enum QuizType {
+  CHOICE    // Multiple choice quiz
+  ORDERING  // Ordering/sorting quiz
 }
 

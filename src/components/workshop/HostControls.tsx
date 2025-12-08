@@ -52,7 +52,7 @@ export function HostControls({
   quizDbId,
   hasQuizResult,
 }: HostControlsProps) {
-  const isQuizSlide = slide.type === "quiz";
+  const isQuizSlide = slide.type === "quiz" || slide.type === "ordering-quiz";
   const isLeaderboardSlide = slide.type === "leaderboard";
   const canStartQuiz =
     isQuizSlide && !activeQuizId && quizDbId && !hasQuizResult;
