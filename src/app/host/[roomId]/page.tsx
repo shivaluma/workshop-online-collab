@@ -47,8 +47,9 @@ export default function HostPage({
     { count: number; total: number } | undefined
   >();
   const [quizResult, setQuizResult] = useState<{
-    correct: number;
+    correct: number | number[];
     stats: QuizStats;
+    quizType?: string;
   } | null>(null);
 
   // Load slide deck and verify host
@@ -239,8 +240,8 @@ export default function HostPage({
   );
 
   const handleQuizResult = useCallback(
-    (quizId: string, correct: number, stats: QuizStats) => {
-      setQuizResult({ correct, stats });
+    (quizId: string, correct: number | number[], stats: QuizStats, quizType?: string) => {
+      setQuizResult({ correct, stats, quizType });
       setActiveQuizId(null);
       setQuizzes((prev) =>
         prev.map((q) => (q.id === quizId ? { ...q, status: "COMPLETED" } : q)),

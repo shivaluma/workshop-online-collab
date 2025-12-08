@@ -1,23 +1,25 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { Trophy, Wifi, WifiOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { slideDeck as defaultSlideDeck, getPreset } from "@/lib/slides";
-import { useWebSocket } from "@/lib/ws";
-import type { ScoreEntry, QuizStats, ParticipantInfo } from "@/lib/ws/types";
-import type { SlideDeck as SlideDeckType } from "@/lib/slides/types";
+import { use, useCallback, useEffect, useState } from "react";
+import { Toaster, toast } from "sonner";
 import {
-  SlideDeck,
   ParticipantNameModal,
   Scoreboard,
+  SlideDeck,
 } from "@/components/workshop";
-import { toast, Toaster } from "sonner";
+import { slideDeck as defaultSlideDeck, getPreset } from "@/lib/slides";
+import type { SlideDeck as SlideDeckType } from "@/lib/slides/types";
 import { cn } from "@/lib/utils";
-import { Wifi, WifiOff, Trophy } from "lucide-react";
+import { useWebSocket } from "@/lib/ws";
+import type { ParticipantInfo, QuizStats, ScoreEntry } from "@/lib/ws/types";
 
 export default function ParticipantPage({
   params,
-}: { params: Promise<{ roomId: string }> }) {
+}: {
+  params: Promise<{ roomId: string }>;
+}) {
   const { roomId } = use(params);
   const router = useRouter();
 
@@ -34,7 +36,8 @@ export default function ParticipantPage({
   const [showScoresSidebar, setShowScoresSidebar] = useState(false);
 
   // Slide deck
-  const [slideDeckData, setSlideDeckData] = useState<SlideDeckType>(defaultSlideDeck);
+  const [slideDeckData, setSlideDeckData] =
+    useState<SlideDeckType>(defaultSlideDeck);
 
   // Quiz state
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -45,8 +48,9 @@ export default function ParticipantPage({
   const [hasAnswered, setHasAnswered] = useState(false);
   const [answeredOption, setAnsweredOption] = useState<number | undefined>();
   const [quizResult, setQuizResult] = useState<{
-    correct: number;
+    correct: number | number[];
     stats: QuizStats;
+    quizType?: string;
   } | null>(null);
 
   // Check for existing participant & load slides from server
@@ -60,12 +64,12 @@ export default function ParticipantPage({
           router.push("/");
           return;
         }
-        
+
         const roomData = await res.json();
-        
+
         // Load slides from room data
         let slides: SlideDeckType | null = null;
-        
+
         if (roomData.customSlides) {
           slides = roomData.customSlides as SlideDeckType;
         } else if (roomData.slidePreset) {
@@ -74,11 +78,11 @@ export default function ParticipantPage({
             slides = presetData;
           }
         }
-        
+
         if (slides) {
           setSlideDeckData(slides);
         }
-        
+
         // Check for existing participant
         const storedId = localStorage.getItem(`participant_${roomId}`);
         const storedName = localStorage.getItem(`participant_name_${roomId}`);
@@ -130,7 +134,9 @@ export default function ParticipantPage({
 
       toast.success("Chào mừng bạn!");
     } catch (error) {
-      setJoinError(error instanceof Error ? error.message : "Không thể vào phòng");
+      setJoinError(
+        error instanceof Error ? error.message : "Không thể vào phòng",
+      );
     } finally {
       setIsJoining(false);
     }
@@ -152,7 +158,7 @@ export default function ParticipantPage({
         .map((p, idx) => ({ ...p, rank: idx + 1 }));
       setScores(sortedScores);
     },
-    []
+    [],
   );
 
   const handleSlideChange = useCallback((index: number) => {
@@ -176,7 +182,7 @@ export default function ParticipantPage({
       setAnsweredOption(undefined);
       setQuizResult(null);
     },
-    []
+    [],
   );
 
   const handleQuizEnd = useCallback((quizId: string) => {
@@ -184,11 +190,16 @@ export default function ParticipantPage({
   }, []);
 
   const handleQuizResult = useCallback(
-    (quizId: string, correct: number, stats: QuizStats) => {
-      setQuizResult({ correct, stats });
+    (
+      quizId: string,
+      correct: number | number[],
+      stats: QuizStats,
+      quizType?: string,
+    ) => {
+      setQuizResult({ correct, stats, quizType });
       setActiveQuizId(null);
     },
-    []
+    [],
   );
 
   const handleScoreboardUpdate = useCallback((newScores: ScoreEntry[]) => {
@@ -222,7 +233,7 @@ export default function ParticipantPage({
       setAnsweredOption(answer);
       submitAnswer(activeQuizId, answer, timeTaken);
     },
-    [activeQuizId, hasAnswered, submitAnswer]
+    [activeQuizId, hasAnswered, submitAnswer],
   );
 
   // Find current participant's score
@@ -259,7 +270,9 @@ export default function ParticipantPage({
               Workshop
             </span>
             {participantName && (
-              <span className="text-xs md:text-base text-muted-foreground truncate">• {participantName}</span>
+              <span className="text-xs md:text-base text-muted-foreground truncate">
+                • {participantName}
+              </span>
             )}
           </div>
 
@@ -274,7 +287,7 @@ export default function ParticipantPage({
               <span
                 className={cn(
                   "text-[10px] md:text-xs hidden sm:inline",
-                  isConnected ? "text-emerald-400" : "text-rose-400"
+                  isConnected ? "text-emerald-400" : "text-rose-400",
                 )}
               >
                 {isReconnecting
@@ -292,7 +305,9 @@ export default function ParticipantPage({
                 className="flex items-center gap-1 md:gap-2 bg-violet-500/20 border border-violet-500/30 rounded-full px-2 md:px-4 py-1 md:py-1.5 hover:bg-violet-500/30 transition-colors"
               >
                 <Trophy className="w-3 h-3 md:w-4 md:h-4 text-violet-400" />
-                <span className="font-mono font-bold text-sm md:text-base">{myScore.score}</span>
+                <span className="font-mono font-bold text-sm md:text-base">
+                  {myScore.score}
+                </span>
                 <span className="text-[10px] md:text-xs text-muted-foreground">
                   #{myScore.rank}
                 </span>

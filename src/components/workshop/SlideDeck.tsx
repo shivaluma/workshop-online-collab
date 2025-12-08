@@ -1,8 +1,8 @@
 "use client";
 
-import { Slide } from "./Slide";
 import type { Slide as SlideType } from "@/lib/slides/types";
-import type { ScoreEntry, QuizStats } from "@/lib/ws/types";
+import type { QuizStats, ScoreEntry } from "@/lib/ws/types";
+import { Slide } from "./Slide";
 
 interface SlideDeckProps {
   slides: SlideType[];
@@ -18,7 +18,11 @@ interface SlideDeckProps {
   hasAnswered?: boolean;
   answeredOption?: number;
   answerCount?: { count: number; total: number };
-  quizResult?: { correct: number; stats: QuizStats } | null;
+  quizResult?: {
+    correct: number | number[];
+    stats: QuizStats;
+    quizType?: string;
+  } | null;
   // Scoreboard props
   scores?: ScoreEntry[];
   showLeaderboard?: boolean;
@@ -73,4 +77,3 @@ export function SlideDeck({
     </div>
   );
 }
-

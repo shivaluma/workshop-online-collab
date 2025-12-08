@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { WSMessage, WSClientMessage, ScoreEntry, ParticipantInfo, QuizStats } from "./types";
+import type {
+  ParticipantInfo,
+  QuizStats,
+  ScoreEntry,
+  WSClientMessage,
+  WSMessage,
+} from "./types";
 
 interface UseWebSocketOptions {
   roomId: string;
@@ -10,14 +16,34 @@ interface UseWebSocketOptions {
   participantId?: string;
   name?: string;
   onSlideChange?: (index: number) => void;
-  onQuizStart?: (quizId: string, question: string, options: string[], timeout: number) => void;
+  onQuizStart?: (
+    quizId: string,
+    question: string,
+    options: string[],
+    timeout: number,
+  ) => void;
   onQuizEnd?: (quizId: string) => void;
-  onQuizResult?: (quizId: string, correct: number, stats: QuizStats) => void;
+  onQuizResult?: (
+    quizId: string,
+    correct: number | number[],
+    stats: QuizStats,
+    quizType?: string,
+  ) => void;
   onScoreboardUpdate?: (scores: ScoreEntry[]) => void;
-  onParticipantJoin?: (id: string, name: string, score: number, count: number) => void;
+  onParticipantJoin?: (
+    id: string,
+    name: string,
+    score: number,
+    count: number,
+  ) => void;
   onParticipantLeave?: (id: string, count: number) => void;
   onAnswerCountUpdate?: (quizId: string, count: number, total: number) => void;
-  onRoomState?: (state: { currentSlide: number; status: string; participants: ParticipantInfo[]; participantId?: string }) => void;
+  onRoomState?: (state: {
+    currentSlide: number;
+    status: string;
+    participants: ParticipantInfo[];
+    participantId?: string;
+  }) => void;
   onError?: (message: string) => void;
 }
 
@@ -27,7 +53,11 @@ interface UseWebSocketReturn {
   changeSlide: (index: number) => void;
   startQuiz: (quizId: string) => void;
   endQuiz: (quizId: string) => void;
-  submitAnswer: (quizId: string, answer: number, timeTaken: number) => void;
+  submitAnswer: (
+    quizId: string,
+    answer: number | number[],
+    timeTaken: number,
+  ) => void;
   revealScoreboard: () => void;
 }
 
@@ -59,7 +89,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
@@ -69,49 +99,84 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     }
   }, []);
 
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const message: WSMessage = JSON.parse(event.data);
+  const handleMessage = useCallback(
+    (event: MessageEvent) => {
+      try {
+        const message: WSMessage = JSON.parse(event.data);
 
-      switch (message.type) {
-        case "room_state":
-          onRoomState?.(message);
-          break;
-        case "slide_changed":
-          onSlideChange?.(message.index);
-          break;
-        case "quiz_started":
-          onQuizStart?.(message.quizId, message.question, message.options, message.timeout);
-          break;
-        case "quiz_ended":
-          onQuizEnd?.(message.quizId);
-          break;
-        case "quiz_result":
-          onQuizResult?.(message.quizId, message.correct, message.stats);
-          break;
-        case "scoreboard_updated":
-          onScoreboardUpdate?.(message.scores);
-          break;
-        case "participant_joined":
-          onParticipantJoin?.(message.id, message.name, message.score, message.participantCount);
-          break;
-        case "participant_left":
-          onParticipantLeave?.(message.id, message.participantCount);
-          break;
-        case "answer_count_updated":
-          onAnswerCountUpdate?.(message.quizId, message.count, message.total);
-          break;
-        case "error":
-          onError?.(message.message);
-          break;
-        case "pong":
-          // Heartbeat received
-          break;
+        switch (message.type) {
+          case "room_state":
+            onRoomState?.(message);
+            break;
+          case "slide_changed":
+            onSlideChange?.(message.index);
+            break;
+          case "quiz_started":
+            onQuizStart?.(
+              message.quizId,
+              message.question,
+              message.options,
+              message.timeout,
+            );
+            break;
+          case "quiz_ended":
+            onQuizEnd?.(message.quizId);
+            break;
+          case "quiz_result": {
+            // For ordering quiz, use correctOrder; for choice quiz, use correct
+            const correctAnswer =
+              message.quizType === "ORDERING"
+                ? message.correctOrder
+                : message.correct;
+            onQuizResult?.(
+              message.quizId,
+              correctAnswer,
+              message.stats,
+              message.quizType,
+            );
+            break;
+          }
+          case "scoreboard_updated":
+            onScoreboardUpdate?.(message.scores);
+            break;
+          case "participant_joined":
+            onParticipantJoin?.(
+              message.id,
+              message.name,
+              message.score,
+              message.participantCount,
+            );
+            break;
+          case "participant_left":
+            onParticipantLeave?.(message.id, message.participantCount);
+            break;
+          case "answer_count_updated":
+            onAnswerCountUpdate?.(message.quizId, message.count, message.total);
+            break;
+          case "error":
+            onError?.(message.message);
+            break;
+          case "pong":
+            // Heartbeat received
+            break;
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
       }
-    } catch (error) {
-      console.error("Error parsing WebSocket message:", error);
-    }
-  }, [onSlideChange, onQuizStart, onQuizEnd, onQuizResult, onScoreboardUpdate, onParticipantJoin, onParticipantLeave, onAnswerCountUpdate, onRoomState, onError]);
+    },
+    [
+      onSlideChange,
+      onQuizStart,
+      onQuizEnd,
+      onQuizResult,
+      onScoreboardUpdate,
+      onParticipantJoin,
+      onParticipantLeave,
+      onAnswerCountUpdate,
+      onRoomState,
+      onError,
+    ],
+  );
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -146,7 +211,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
       wsRef.current.onclose = () => {
         console.log("WebSocket disconnected");
         setIsConnected(false);
-        
+
         if (pingIntervalRef.current) {
           clearInterval(pingIntervalRef.current);
         }
@@ -185,21 +250,33 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     };
   }, [connect]);
 
-  const changeSlide = useCallback((index: number) => {
-    send({ type: "change_slide", index });
-  }, [send]);
+  const changeSlide = useCallback(
+    (index: number) => {
+      send({ type: "change_slide", index });
+    },
+    [send],
+  );
 
-  const startQuiz = useCallback((quizId: string) => {
-    send({ type: "start_quiz", quizId });
-  }, [send]);
+  const startQuiz = useCallback(
+    (quizId: string) => {
+      send({ type: "start_quiz", quizId });
+    },
+    [send],
+  );
 
-  const endQuiz = useCallback((quizId: string) => {
-    send({ type: "end_quiz", quizId });
-  }, [send]);
+  const endQuiz = useCallback(
+    (quizId: string) => {
+      send({ type: "end_quiz", quizId });
+    },
+    [send],
+  );
 
-  const submitAnswer = useCallback((quizId: string, answer: number, timeTaken: number) => {
-    send({ type: "submit_answer", quizId, answer, timeTaken });
-  }, [send]);
+  const submitAnswer = useCallback(
+    (quizId: string, answer: number | number[], timeTaken: number) => {
+      send({ type: "submit_answer", quizId, answer, timeTaken });
+    },
+    [send],
+  );
 
   const revealScoreboard = useCallback(() => {
     send({ type: "reveal_scoreboard" });
@@ -215,4 +292,3 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     revealScoreboard,
   };
 }
-

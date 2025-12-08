@@ -26,7 +26,7 @@ interface SlideProps {
   hasAnswered?: boolean;
   answeredOption?: number;
   answerCount?: { count: number; total: number };
-  quizResult?: { correct: number; stats: QuizStats } | null;
+  quizResult?: { correct: number | number[]; stats: QuizStats; quizType?: string } | null;
   // Scoreboard props
   scores?: ScoreEntry[];
   showLeaderboard?: boolean;
@@ -76,7 +76,11 @@ export function Slide({
             quizResult={quizResult}
           />
         );
-      case "ordering-quiz":
+      case "ordering-quiz": {
+        // Transform quizResult for ordering quiz component
+        const orderingQuizResult = quizResult && quizResult.quizType === "ORDERING" 
+          ? { correctOrder: quizResult.correct as number[], stats: quizResult.stats }
+          : null;
         return (
           <OrderingQuizSlide
             slide={slide}
@@ -87,9 +91,10 @@ export function Slide({
             onSubmitAnswer={onSubmitAnswer as ((answer: number[], timeTaken: number) => void) | undefined}
             hasAnswered={hasAnswered}
             answerCount={answerCount}
-            quizResult={quizResult as { correctOrder: number[]; stats: import("@/lib/ws/types").QuizStats } | null | undefined}
+            quizResult={orderingQuizResult}
           />
         );
+      }
       case "summary":
         return <SummarySlide slide={slide} />;
       case "leaderboard":
