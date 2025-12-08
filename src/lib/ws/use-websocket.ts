@@ -126,8 +126,8 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
             // For ordering quiz, use correctOrder; for choice quiz, use correct
             const correctAnswer =
               message.quizType === "ORDERING"
-                ? message.correctOrder
-                : message.correct;
+                ? message.correctOrder ?? []
+                : message.correct ?? 0;
             onQuizResult?.(
               message.quizId,
               correctAnswer,

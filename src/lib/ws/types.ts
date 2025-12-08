@@ -4,11 +4,11 @@ export type WSMessage =
   | { type: "participant_joined"; id: string; name: string; score: number; participantCount: number }
   | { type: "participant_left"; id: string; name: string; participantCount: number }
   | { type: "slide_changed"; index: number }
-  | { type: "quiz_started"; quizId: string; question: string; options: string[]; timeout: number }
+  | { type: "quiz_started"; quizId: string; question: string; options: string[]; timeout: number; quizType?: "CHOICE" | "ORDERING" }
   | { type: "answer_submitted"; participantId: string; quizId: string }
   | { type: "answer_count_updated"; quizId: string; count: number; total: number }
   | { type: "quiz_ended"; quizId: string }
-  | { type: "quiz_result"; quizId: string; correct: number; stats: QuizStats }
+  | { type: "quiz_result"; quizId: string; correct?: number; correctOrder?: number[]; stats: QuizStats; quizType?: "CHOICE" | "ORDERING" }
   | { type: "scoreboard_updated"; scores: ScoreEntry[] }
   | { type: "room_state"; currentSlide: number; status: string; participants: ParticipantInfo[] }
   | { type: "error"; message: string }
@@ -19,7 +19,7 @@ export type WSClientMessage =
   | { type: "change_slide"; index: number }
   | { type: "start_quiz"; quizId: string }
   | { type: "end_quiz"; quizId: string }
-  | { type: "submit_answer"; quizId: string; answer: number; timeTaken: number }
+  | { type: "submit_answer"; quizId: string; answer: number | number[]; timeTaken: number }
   | { type: "reveal_scoreboard" }
   | { type: "ping" };
 
