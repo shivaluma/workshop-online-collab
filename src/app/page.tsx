@@ -1,9 +1,21 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  Check,
+  Database,
+  FileJson,
+  Presentation,
+  Server,
+  Sparkles,
+  Upload,
+  Users,
+  X,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -11,20 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast, Toaster } from "sonner";
-import {
-  Users,
-  Presentation,
-  Upload,
-  FileJson,
-  Sparkles,
-  ArrowRight,
-  Check,
-  X,
-  Database,
-  Server,
-} from "lucide-react";
 import { getPresetList } from "@/lib/slides";
 
 // Icon mapping for presets
@@ -33,16 +33,42 @@ const PRESET_ICONS: Record<string, React.ReactNode> = {
   "system-design-101": <Server className="w-5 h-5 text-blue-400" />,
 };
 
+// Wrapper with Suspense for useSearchParams
 export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+function HomePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [presets, setPresets] = useState<
-    { id: string; title: string; author: string; slideCount: number; quizCount: number }[]
+    {
+      id: string;
+      title: string;
+      author: string;
+      slideCount: number;
+      quizCount: number;
+    }[]
   >([]);
   const [isCreating, setIsCreating] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [isJoining, setIsJoining] = useState(false);
+
+  // Secret host mode - only show host tab if ?host=1 or unlocked via easter egg
+  const [hostUnlocked, setHostUnlocked] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
 
   // Slide selection
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
@@ -52,6 +78,24 @@ export default function HomePage() {
     slideCount: number;
     quizCount: number;
   } | null>(null);
+
+
+  // Check URL param for host mode
+  useEffect(() => {
+    if (searchParams.get("host") === "1") {
+      setHostUnlocked(true);
+    }
+  }, [searchParams]);
+
+  // Easter egg: click logo 5 times to unlock host mode
+  const handleLogoClick = () => {
+    const newCount = logoClickCount + 1;
+    setLogoClickCount(newCount);
+    if (newCount >= 5 && !hostUnlocked) {
+      setHostUnlocked(true);
+      toast.success("🎉 Host mode unlocked!");
+    }
+  };
 
   // Load presets on mount
   useEffect(() => {
@@ -165,14 +209,18 @@ export default function HomePage() {
       <Toaster position="top-center" theme="dark" />
 
       <div className="w-full max-w-md">
-        {/* Logo */}
+        {/* Logo - click 5 times to unlock host mode */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-2xl font-bold">
+          <button
+            type="button"
+            onClick={handleLogoClick}
+            className="inline-flex items-center gap-2 text-2xl font-bold cursor-default select-none"
+          >
             <Sparkles className="w-7 h-7 text-violet-400" />
             <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
               Workshop
             </span>
-          </div>
+          </button>
           <p className="text-sm text-muted-foreground mt-1">
             Interactive Quiz Platform
           </p>
@@ -180,22 +228,31 @@ export default function HomePage() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="join" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-12 bg-zinc-900">
-            <TabsTrigger
-              value="join"
-              className="data-[state=active]:bg-violet-600"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Tham gia
-            </TabsTrigger>
-            <TabsTrigger
-              value="host"
-              className="data-[state=active]:bg-violet-600"
-            >
-              <Presentation className="w-4 h-4 mr-2" />
-              Tạo phòng
-            </TabsTrigger>
-          </TabsList>
+          {hostUnlocked ? (
+            <TabsList className="grid w-full grid-cols-2 h-12 bg-zinc-900">
+              <TabsTrigger
+                value="join"
+                className="data-[state=active]:bg-violet-600"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Tham gia
+              </TabsTrigger>
+              <TabsTrigger
+                value="host"
+                className="data-[state=active]:bg-violet-600"
+              >
+                <Presentation className="w-4 h-4 mr-2" />
+                Tạo phòng
+              </TabsTrigger>
+            </TabsList>
+          ) : (
+            <div className="h-12 bg-zinc-900 rounded-lg flex items-center justify-center">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
+                <Users className="w-4 h-4" />
+                Tham gia Workshop
+              </div>
+            </div>
+          )}
 
           {/* Join Tab */}
           <TabsContent value="join" className="mt-4">
@@ -235,145 +292,145 @@ export default function HomePage() {
             </Card>
           </TabsContent>
 
-          {/* Host Tab */}
-          <TabsContent value="host" className="mt-4">
-            <Card className="bg-zinc-900/50 border-zinc-800">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Tạo Workshop</CardTitle>
-                <CardDescription>
-                  Chọn bài giảng có sẵn hoặc upload file JSON
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Presets */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Bài giảng có sẵn
-                  </label>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {presets.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedPreset(preset.id);
-                          setUploadedFile(null);
-                        }}
-                        className={`w-full p-3 rounded-lg border text-left transition-all relative ${
-                          selectedPreset === preset.id
-                            ? "border-violet-500 bg-violet-500/10"
-                            : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="shrink-0">
-                            {PRESET_ICONS[preset.id] || (
-                              <Sparkles className="w-5 h-5 text-violet-400" />
+          {/* Host Tab - only shown when unlocked */}
+          {hostUnlocked && (
+            <TabsContent value="host" className="mt-4">
+              <Card className="bg-zinc-900/50 border-zinc-800">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg">Tạo Workshop</CardTitle>
+                  <CardDescription>
+                    Chọn bài giảng có sẵn hoặc upload file JSON
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Presets */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Bài giảng có sẵn
+                    </label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {presets.map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPreset(preset.id);
+                            setUploadedFile(null);
+                          }}
+                          className={`w-full p-3 rounded-lg border text-left transition-all relative ${
+                            selectedPreset === preset.id
+                              ? "border-violet-500 bg-violet-500/10"
+                              : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="shrink-0">
+                              {PRESET_ICONS[preset.id] || (
+                                <Sparkles className="w-5 h-5 text-violet-400" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">
+                                {preset.title}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {preset.author}
+                              </div>
+                            </div>
+                            <div className="text-right text-xs text-muted-foreground shrink-0">
+                              <div>{preset.slideCount} slides</div>
+                              <div>{preset.quizCount} quizzes</div>
+                            </div>
+                            {selectedPreset === preset.id && (
+                              <Check className="w-5 h-5 text-violet-400 shrink-0" />
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">
-                              {preset.title}
-                            </div>
-                            <div className="text-xs text-muted-foreground truncate">
-                              {preset.author}
-                            </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-zinc-700" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-zinc-900 px-2 text-muted-foreground">
+                        hoặc
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Upload */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Upload JSON
+                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+
+                    {uploadedFile ? (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10">
+                        <FileJson className="w-8 h-8 text-emerald-400" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">
+                            {uploadedFile.name}
                           </div>
-                          <div className="text-right text-xs text-muted-foreground shrink-0">
-                            <div>{preset.slideCount} slides</div>
-                            <div>{preset.quizCount} quizzes</div>
+                          <div className="text-xs text-muted-foreground">
+                            {uploadedFile.slideCount} slides,{" "}
+                            {uploadedFile.quizCount} quizzes
                           </div>
-                          {selectedPreset === preset.id && (
-                            <Check className="w-5 h-5 text-violet-400 shrink-0" />
-                          )}
                         </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-zinc-700" />
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-zinc-900 px-2 text-muted-foreground">
-                      hoặc
-                    </span>
-                  </div>
-                </div>
-
-                {/* Upload */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Upload JSON
-                  </label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-
-                  {uploadedFile ? (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10">
-                      <FileJson className="w-8 h-8 text-emerald-400" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
-                          {uploadedFile.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {uploadedFile.slideCount} slides,{" "}
-                          {uploadedFile.quizCount} quizzes
-                        </div>
+                        <button
+                          type="button"
+                          onClick={clearUpload}
+                          className="p-1 hover:bg-zinc-700 rounded"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
+                    ) : (
                       <button
                         type="button"
-                        onClick={clearUpload}
-                        className="p-1 hover:bg-zinc-700 rounded"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full p-4 rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-600 transition-colors"
                       >
-                        <X className="w-4 h-4" />
+                        <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                        <div className="text-sm text-muted-foreground">
+                          Click để upload file .json
+                        </div>
                       </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full p-4 rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-600 transition-colors"
-                    >
-                      <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                      <div className="text-sm text-muted-foreground">
-                        Click để upload file .json
-                      </div>
-                    </button>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {/* Create Button */}
-                <Button
-                  onClick={handleCreateRoom}
-                  disabled={
-                    (!selectedPreset && !uploadedFile) || isCreating
-                  }
-                  className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700"
-                >
-                  {isCreating ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Đang tạo...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" />
-                      Tạo phòng Workshop
-                    </span>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  {/* Create Button */}
+                  <Button
+                    onClick={handleCreateRoom}
+                    disabled={(!selectedPreset && !uploadedFile) || isCreating}
+                    className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700"
+                  >
+                    {isCreating ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Đang tạo...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Tạo phòng Workshop
+                      </span>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

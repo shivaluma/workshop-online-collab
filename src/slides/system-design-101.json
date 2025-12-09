@@ -363,12 +363,12 @@
       "emoji": "🔢",
       "question": "Sắp xếp đúng thứ tự các bước scale database (từ đầu tiên đến cuối cùng):",
       "items": [
-        "Indexing - Tối ưu queries",
         "Caching - Giảm load DB",
+        "Indexing - Tối ưu queries",
         "Replication - Scale reads",
         "Sharding - Scale writes"
       ],
-      "correctOrder": [0, 1, 2, 3],
+      "correctOrder": [1, 0, 2, 3],
       "timeLimit": 30,
       "explanation": "Thứ tự đúng: Indexing (90% đủ rồi!) → Caching → Replication → Sharding. Sharding là giải pháp CUỐI CÙNG vì complexity cao nhất!"
     },
@@ -389,12 +389,33 @@
     {
       "id": 43,
       "type": "article",
+      "title": "Phase 9: API Gateway",
+      "emoji": "🚪",
+      "content": "### API Gateway - Cửa ngõ duy nhất\n\n```mermaid\nflowchart TB\n    C1[\"📱 Mobile\"] --> GW\n    C2[\"💻 Web\"] --> GW\n    C3[\"🤖 Third-party\"] --> GW\n    GW[\"🚪 API Gateway\"] --> US[\"User\"]\n    GW --> PS[\"Product\"]\n    GW --> OS[\"Order\"]\n```\n\n### Gateway làm gì?\n\n| Chức năng | Mô tả |\n|-----------|-------|\n| 🔀 **Routing** | Route requests đến đúng service |\n| 🔒 **Authentication** | Verify JWT/API keys tập trung |\n| ⚡ **Rate limiting** | Chống abuse, DDoS |\n| 📊 **Logging/Metrics** | Centralized observability |\n| 🔄 **Protocol translation** | REST ↔ gRPC, WebSocket |\n\n### Tools: **Kong**, **AWS API Gateway**, **Nginx**, **Traefik**"
+    },
+    {
+      "id": 44,
+      "type": "article",
+      "title": "Phase 9: BFF Pattern",
+      "emoji": "🎨",
+      "content": "### Backend For Frontend - API riêng cho từng client\n\n```mermaid\nflowchart TB\n    M[\"📱 Mobile App\"] --> BFF1[\"📱 Mobile BFF\"]\n    W[\"💻 Web App\"] --> BFF2[\"💻 Web BFF\"]\n    BFF1 & BFF2 --> US[\"User Service\"]\n    BFF1 & BFF2 --> PS[\"Product Service\"]\n    BFF1 & BFF2 --> OS[\"Order Service\"]\n```\n\n### Tại sao cần BFF?\n\n| Client | Needs |\n|--------|-------|\n| 📱 **Mobile** | Ít data, tiết kiệm bandwidth |\n| 💻 **Web** | Nhiều data hơn, rich UI |\n| 📺 **TV App** | UI đơn giản, ít fields |\n\n### BFF giải quyết:\n- ✅ **Aggregate** data từ nhiều services\n- ✅ **Transform** response cho từng platform\n- ✅ **Optimize** payload size cho mobile\n- ✅ **Decouple** frontend khỏi backend services"
+    },
+    {
+      "id": 45,
+      "type": "article",
+      "title": "Phase 9: Gateway vs BFF",
+      "emoji": "⚖️",
+      "content": "### Khi nào dùng gì?\n\n| | API Gateway | BFF |\n|--|-------------|-----|\n| **Focus** | Cross-cutting concerns | Client-specific logic |\n| **Số lượng** | 1 (hoặc ít) | 1 per client type |\n| **Logic** | Routing, auth, rate limit | Aggregation, transformation |\n| **Team own** | Platform/DevOps | Frontend teams |\n\n### Có thể kết hợp cả hai!\n\n```\n📱 Mobile → 🚪 Gateway → 📱 Mobile BFF → Services\n💻 Web    → 🚪 Gateway → 💻 Web BFF    → Services\n```\n\n### Kết hợp:\n- **Gateway**: Auth, rate limiting, SSL termination\n- **BFF**: Data aggregation, response shaping"
+    },
+    {
+      "id": 46,
+      "type": "article",
       "title": "Phase 9: Cảnh báo!",
       "emoji": "🚨",
       "content": "### ⚠️ Microservices tăng complexity 10x!\n\n> *\"You're not Netflix. I'm not Netflix.\"* — Martin Joo\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người maintain |\n| ❌ Startup giai đoạn đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps maturity | K8s, monitoring phức tạp |\n| ❌ Monolith chưa gặp vấn đề | Đừng fix cái không hỏng! |\n\n### Problems phải giải quyết:\n\n- 🔗 Service-to-service communication\n- 📊 Distributed tracing\n- 🔄 Data consistency across services\n- 🐛 Debugging distributed systems"
     },
     {
-      "id": 44,
+      "id": 47,
       "type": "quiz",
       "quizId": "q9",
       "title": "🎯 Quiz: Microservices",
@@ -410,7 +431,7 @@
       "explanation": "Circuit breaker + caching! Microservices cần resilience: cache data cần thiết, graceful degradation khi downstream fail. Không bao giờ access DB của service khác trực tiếp!"
     },
     {
-      "id": 45,
+      "id": 48,
       "type": "quiz",
       "quizId": "q10",
       "title": "🎯 Final Quiz",
@@ -426,7 +447,7 @@
       "explanation": "YAGNI! (You Aren't Gonna Need It). Startup cần ship nhanh, validate idea. Monolith đơn giản dễ develop/debug/deploy. Chỉ tách khi thực sự có vấn đề về scale. 90% companies không cần microservices!"
     },
     {
-      "id": 46,
+      "id": 49,
       "type": "summary",
       "title": "Tổng kết System Design Journey",
       "emoji": "📝",
@@ -440,11 +461,11 @@
         "⚡ Phase 6: Caching giảm DB load",
         "🌍 Phase 7: CDN cho static assets",
         "🗃️ Phase 8: DB Replication + Sharding",
-        "🧩 Phase 9: Microservices - CHỈ KHI thật sự cần!"
+        "🧩 Phase 9: Microservices + API Gateway + BFF"
       ]
     },
     {
-      "id": 47,
+      "id": 50,
       "type": "leaderboard",
       "title": "🏆 System Design Champions",
       "emoji": "🏆",
@@ -509,14 +530,14 @@
       "timeLimit": 20
     },
     {
-      "slideId": 44,
+      "slideId": 47,
       "question": "Order Service cần data từ User Service và Product Service. Cả 2 services đều down. Order Service nên làm gì?",
       "options": ["Crash luôn và báo lỗi 500", "Cache data từ các services khác, dùng cached data khi downstream down", "Chờ đến khi services khác up", "Gọi trực tiếp vào database của User/Product Service"],
       "correctOption": 1,
       "timeLimit": 25
     },
     {
-      "slideId": 45,
+      "slideId": 48,
       "question": "Startup 5 devs, MVP giai đoạn đầu, chưa có users. CTO muốn dùng K8s + microservices + Kafka từ ngày 1. Bạn sẽ nói gì?",
       "options": ["Đồng ý, chuẩn bị cho scale từ đầu là tốt", "Phản đối, start với monolith đơn giản, thêm complexity khi cần", "Đề xuất dùng serverless thay vì K8s", "Đồng ý nhưng bỏ Kafka"],
       "correctOption": 1,

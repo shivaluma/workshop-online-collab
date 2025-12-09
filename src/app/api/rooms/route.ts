@@ -2,6 +2,16 @@ import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+// Generate short room code (5 chars, uppercase alphanumeric, no confusing chars)
+function generateRoomCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No I, O, 0, 1 to avoid confusion
+  let code = "";
+  for (let i = 0; i < 5; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 // Create a new room
 export async function POST(request: NextRequest) {
   try {
@@ -21,8 +31,28 @@ export async function POST(request: NextRequest) {
       // Empty body, use defaults
     }
 
+    // Generate unique short room code
+    let roomCode: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    do {
+      roomCode = generateRoomCode();
+      const existing = await prisma.room.findUnique({ where: { id: roomCode } });
+      if (!existing) break;
+      attempts++;
+    } while (attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      return NextResponse.json(
+        { error: "Could not generate unique room code" },
+        { status: 500 },
+      );
+    }
+
     const room = await prisma.room.create({
       data: {
+        id: roomCode,
         ...(slidePreset && { slidePreset }),
         ...(customSlides && { customSlides }),
       },

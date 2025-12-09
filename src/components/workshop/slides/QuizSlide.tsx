@@ -271,7 +271,7 @@ export function QuizSlide({
       </div>
 
       {/* Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+      <div className="grid grid-cols-1 gap-2 md:gap-3">
         {options.map((option, idx) => {
           const isSelected = selectedAnswer === idx || answeredOption === idx;
           const isDisabled = hasAnswered || isSubmitting || isHost;
@@ -284,24 +284,24 @@ export function QuizSlide({
               onClick={() => handleSelectAnswer(idx)}
               disabled={isDisabled}
               className={cn(
-                "relative overflow-hidden rounded-xl md:rounded-2xl p-3 md:p-6 text-left transition-all duration-300 border-2",
-                isSelected ? "ring-2 md:ring-4 ring-white/30 scale-[1.01] md:scale-[1.02]" : "",
+                "relative overflow-hidden rounded-xl md:rounded-2xl p-3 md:p-5 text-left transition-all duration-300 border-2",
+                isSelected ? "ring-2 md:ring-4 ring-white/30 scale-[1.01]" : "",
                 isDisabled && !isSelected
                   ? "opacity-50 cursor-not-allowed"
-                  : "hover:scale-[1.01] md:hover:scale-[1.02] cursor-pointer active:scale-[0.98]",
+                  : "hover:scale-[1.005] cursor-pointer active:scale-[0.99]",
                 optionBgColors[idx],
               )}
             >
-              <div className="flex items-center gap-2 md:gap-4">
+              <div className="flex items-start gap-3 md:gap-4">
                 <div
                   className={cn(
-                    "w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br flex items-center justify-center text-sm md:text-xl font-bold text-white shrink-0",
+                    "w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br flex items-center justify-center text-sm md:text-lg font-bold text-white shrink-0 mt-0.5",
                     optionColors[idx],
                   )}
                 >
                   {String.fromCharCode(65 + idx)}
                 </div>
-                <span className="text-sm md:text-xl font-medium line-clamp-2">{option}</span>
+                <span className="text-sm md:text-base font-medium flex-1">{option}</span>
               </div>
               {isSelected && hasAnswered && (
                 <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2">
