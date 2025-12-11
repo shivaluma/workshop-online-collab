@@ -168,7 +168,7 @@
       "type": "article",
       "title": "Phase 5: Stateless Architecture",
       "emoji": "☁️",
-      "content": "![Phase 5 Architecture](https://martinjoo.dev/_nuxt/img/7.b831e0d.png)\n\n### Rule vàng: Tất cả servers phải GIỐNG HỆT NHAU!\n\n### Giải pháp: Chuyển state ra external services\n\n| Local State | External Solution |\n|-------------|------------------|\n| 📁 **Files** | AWS S3, MinIO, GCS |\n| 🍪 **Sessions** | Redis, Database |\n| 💾 **Cache** | Redis, Memcached |\n\n```mermaid\nflowchart LR\n    S1[\"🖥️ Server 1\"] --> S3[(\"☁️ S3 Bucket\")]\n    S2[\"🖥️ Server 2\"] --> S3\n    S3 --> S1\n    S3 --> S2\n```\n\n> **Kết quả**: Tất cả servers đều access được cùng data!"
+      "content": "![Phase 5 Architecture](https://martinjoo.dev/_nuxt/img/7.b831e0d.png)\n\n### Golden rule: Tất cả servers phải GIỐNG HỆT NHAU!\n\n### Giải pháp: Chuyển state ra external services\n\n| Local State | External Solution |\n|-------------|------------------|\n| 📁 **Files** | AWS S3, MinIO, GCS |\n| 🍪 **Sessions** | Redis, Database |\n| 💾 **Cache** | Redis, Memcached |\n\n```mermaid\nflowchart LR\n    S1[\"🖥️ Server 1\"] --> S3[(\"☁️ S3 Bucket\")]\n    S2[\"🖥️ Server 2\"] --> S3\n    S3 --> S1\n    S3 --> S2\n```\n\n> **Kết quả**: Tất cả servers đều access được cùng data!"
     },
     {
       "id": 20,
@@ -198,14 +198,7 @@
       "type": "article",
       "title": "Phase 6: Caching",
       "emoji": "⚡",
-      "content": "### Ý tưởng: Lưu kết quả lại, không query lại!\n\n```mermaid\nflowchart LR\n    A[\"👤 User\"] --> API[\"🖥️ API\"]\n    API -->|\"1. Check cache\"| C[(\"⚡ Redis\")]\n    C -->|\"HIT: Return ngay!\"| API\n    C -->|\"MISS\"| DB[(\"🗄️ Database\")]\n    DB -->|\"2. Save to cache\"| C\n    \n    style C fill:#10b981,stroke:#059669,color:#fff\n```\n\n### Hiệu quả:\n\n| Metric | Không cache | Có cache |\n|--------|-------------|----------|\n| DB queries/sec | 50,000 | 5,000 (-90%) |\n| Response time | 50-200ms | 1-5ms |\n| DB CPU | 100% | 10% |"
-    },
-    {
-      "id": 23,
-      "type": "article",
-      "title": "Phase 6: Cache-Aside Pattern",
-      "emoji": "🔍",
-      "content": "### Pattern phổ biến nhất: Lazy Loading\n\n```javascript\nasync function getProduct(id) {\n  // 1. Check cache first\n  const cached = await redis.get(`product:${id}`);\n  if (cached) return JSON.parse(cached); // HIT!\n  \n  // 2. Cache miss → query DB\n  const product = await db.product.findById(id);\n  \n  // 3. Save to cache (expire after 1 hour)\n  await redis.set(`product:${id}`, JSON.stringify(product), 'EX', 3600);\n  \n  return product;\n}\n```\n\n### Cache Invalidation - Vấn đề khó nhất!\n\n```javascript\nasync function updateProduct(id, data) {\n  await db.product.update(id, data);\n  await redis.del(`product:${id}`); // QUAN TRỌNG!\n}\n```"
+      "content": "### Ý tưởng: Lưu kết quả, không query lại!\n\n```mermaid\nflowchart LR\n    API[\"🖥️ API\"] -->|\"1. Check\"| C[(\"⚡ Redis\")]\n    C -->|\"HIT\"| API\n    C -->|\"MISS\"| DB[(\"🗄️ DB\")]\n    DB -->|\"2. Save\"| C\n```\n\n### Hiệu quả:\n\n| Metric | Trước | Sau |\n|--------|-------|-----|\n| DB queries/sec | 50,000 | 5,000 |\n| Response time | 200ms | 5ms |\n\n### Cache-Aside Pattern:\n\n```\n1. Check cache → HIT? Return!\n2. MISS → Query DB\n3. Save to cache (TTL 1h)\n4. Update? Delete cache key!\n```\n\n> ⚠️ **Cache invalidation** là vấn đề khó nhất!"
     },
     {
       "id": 24,
@@ -307,26 +300,56 @@
     {
       "id": 34,
       "type": "article",
+      "title": "Phase 8: CAP Theorem",
+      "emoji": "🔺",
+      "content": "![CAP Theorem](/cap.png)\n\n### Trong distributed system, chỉ có thể chọn 2/3:\n\n| Thuộc tính | Ý nghĩa |\n|------------|--------|\n| **C**onsistency | Mọi read nhận data mới nhất |\n| **A**vailability | Mọi request đều được response |\n| **P**artition Tolerance | Hệ thống chạy khi network fail |\n\n> ⚠️ **Network LUÔN có thể fail → Phải chọn P!**\n\n| Lựa chọn | Trade-off | Ví dụ |\n|----------|-----------|-------|\n| **CP** | Timeout khi partition | Banking, Inventory |\n| **AP** | Trả data cũ | Social feed, DNS |"
+    },
+    {
+      "id": 35,
+      "type": "article",
+      "title": "Phase 8: Consistency Patterns",
+      "emoji": "🔄",
+      "content": "### Timeline: Write → Read thấy khi nào?\n\n```\n⏱️ Timeline sau khi WRITE:\n\n|--WRITE--|----delay----|--READ--|\n\n🔴 Weak:     Read có thể KHÔNG thấy (mất data OK)\n🟡 Eventual: Read thấy sau vài ms~giây\n🟢 Strong:   Read thấy NGAY LẬP TỨC\n```\n\n| Pattern | Khi nào dùng? | Ví dụ |\n|---------|---------------|-------|\n| **Weak** | Mất data OK | VoIP, Game realtime |\n| **Eventual** | Delay OK | Social feed, DNS |\n| **Strong** | Phải chính xác | Banking, Inventory |\n\n> 💡 **Rule**: Chọn level **thấp nhất** business chấp nhận!"
+    },
+    {
+      "id": 36,
+      "type": "quiz",
+      "quizId": "q-cap",
+      "title": "🎯 Quiz: CAP Theorem",
+      "question": "E-commerce: Khi checkout, hệ thống cần check số lượng tồn kho. Network partition xảy ra giữa 2 nodes. Nên chọn CP hay AP?",
+      "options": [
+        "AP - user cần checkout được, tồn kho sai vài cái không sao",
+        "CP - phải đảm bảo tồn kho chính xác, chấp nhận timeout/error",
+        "Không cần chọn, dùng cache là xong",
+        "AP cho read, CP cho write"
+      ],
+      "correctOption": 1,
+      "timeLimit": 20,
+      "explanation": "Inventory cần CP! Nếu AP, 2 users có thể mua cùng 1 sản phẩm cuối cùng → oversell. Tốt hơn là báo lỗi/timeout thay vì bán quá số lượng có."
+    },
+    {
+      "id": 37,
+      "type": "article",
       "title": "Phase 8: Sharding - Khi 1 DB không đủ",
       "emoji": "🔀",
       "content": "### Replication giải quyết READ, nhưng WRITE thì sao?\n\n| Vấn đề | Replication giải quyết? |\n|--------|------------------------|\n| READ scale | ✅ Thêm followers |\n| High Availability | ✅ Failover |\n| WRITE scale | ❌ Vẫn 1 Leader! |\n| Data quá lớn | ❌ Mỗi node full copy |\n\n### Khi nào cần Sharding?\n\n- 📊 Data > 1TB, 1 server không chứa nổi\n- ✍️ Write-heavy workload (10K+ writes/sec)\n- 🌍 Geo-distributed users cần low latency\n\n> **Sharding = Chia data ra nhiều databases!**"
     },
     {
-      "id": 35,
+      "id": 38,
       "type": "article",
       "title": "Phase 8: Sharding Strategies",
       "emoji": "🗂️",
       "content": "### Horizontal Partitioning (Sharding)\n\n```mermaid\nflowchart TB\n    API[\"🖥️ API\"] --> R[\"🔀 Router\"]\n    R -->|\"user_id 1-1M\"| S1[(\"🗄️ Shard 1\")]\n    R -->|\"user_id 1M-2M\"| S2[(\"🗄️ Shard 2\")]\n    R -->|\"user_id 2M-3M\"| S3[(\"🗄️ Shard 3\")]\n    \n    style S1 fill:#3b82f6,stroke:#2563eb\n    style S2 fill:#10b981,stroke:#059669\n    style S3 fill:#f59e0b,stroke:#d97706\n```\n\n### Shard Key Strategies:\n\n| Strategy | Ví dụ | Ưu điểm | Nhược điểm |\n|----------|-------|---------|------------|\n| **Range** | user_id 1-1M | Dễ implement | Hot spots |\n| **Hash** | hash(user_id) % 3 | Phân bố đều | Range query khó |\n| **Geo** | region = 'VN' | Low latency | Uneven distribution |"
     },
     {
-      "id": 36,
+      "id": 39,
       "type": "article",
       "title": "Phase 8: Sharding Challenges",
       "emoji": "⚠️",
       "content": "### Sharding KHÔNG miễn phí!\n\n| Challenge | Mô tả |\n|-----------|-------|\n| 🔗 **Cross-shard queries** | JOIN giữa shards = nightmare |\n| 🔄 **Resharding** | Thêm shard = migrate TB data |\n| 🆔 **Global unique IDs** | Auto-increment không work |\n| 📊 **Aggregations** | COUNT(*) cần query tất cả shards |\n\n### Ví dụ Cross-shard Problem:\n\n```sql\n-- User ở Shard 1, Orders ở Shard 2\n-- Query này KHÔNG THỂ chạy đơn giản!\nSELECT users.name, orders.total\nFROM users\nJOIN orders ON users.id = orders.user_id\n```\n\n> **Rule**: Shard theo data access pattern, không phải random!"
     },
     {
-      "id": 37,
+      "id": 40,
       "type": "quiz",
       "quizId": "q8",
       "title": "🎯 Quiz: Sharding",
@@ -342,21 +365,51 @@
       "explanation": "Shard theo user_id! Tất cả orders của 1 user nằm cùng shard → query nhanh, không cần cross-shard. Shard key phải match access pattern phổ biến nhất."
     },
     {
-      "id": 38,
+      "id": 41,
       "type": "article",
-      "title": "Phase 8: Vertical Partitioning",
-      "emoji": "📊",
-      "content": "### Chia theo columns thay vì rows\n\n```mermaid\nflowchart LR\n    subgraph Before[\"❌ Trước\"]\n        T1[(\"users\\nid, name, email,\\navatar_blob (5MB),\\nbio, settings_json\")]\n    end\n    \n    subgraph After[\"✅ Sau\"]\n        T2[(\"users_core\\nid, name, email\")]\n        T3[(\"users_profile\\nuser_id, avatar_blob\")]\n        T4[(\"users_settings\\nuser_id, settings_json\")]\n    end\n```\n\n### Khi nào dùng?\n\n| Trường hợp | Giải pháp |\n|------------|----------|\n| Có BLOB columns lớn | Tách ra table riêng |\n| Columns có access pattern khác nhau | Hot/cold data separation |\n| Một số columns cần scale khác | Microservice-ready |"
+      "title": "Phase 8: Partitioning là gì?",
+      "emoji": "🗂️",
+      "content": "### Partitioning = Chia table trong cùng 1 database\n\n```mermaid\nflowchart TB\n    DB[(\"🗄️ Database Instance\")]\n    DB --> P1[(\"📂 Partition 1\\nuser_id 1-1M\")]\n    DB --> P2[(\"📂 Partition 2\\nuser_id 1M-2M\")]\n    DB --> P3[(\"📂 Partition 3\\nuser_id 2M-3M\")]\n    \n    style DB fill:#3b82f6,stroke:#2563eb\n```\n\n### Đặc điểm:\n\n| Điểm | Mô tả |\n|------|-------|\n| 📍 **Vị trí** | Cùng 1 DB instance / cluster |\n| 🔀 **Routing** | DB engine tự động route query |\n| ⚡ **Query** | Partition pruning - chỉ scan phần cần |\n| 🗃️ **Mục đích** | Quản lý data lớn, archival dễ, giảm contention |\n\n> **Partitioning giúp tối ưu hiệu năng trong 1 database, nhưng KHÔNG scale-out được!**"
     },
     {
-      "id": 39,
+      "id": 42,
+      "type": "article",
+      "title": "Phase 8: Các loại Partitioning",
+      "emoji": "📊",
+      "content": "### 3 loại Partitioning chính:\n\n| Loại | Cách chia | Ví dụ |\n|------|-----------|-------|\n| **Horizontal** | Theo rows (range/hash/list) | user_id 1-1M → Partition A |\n| **Vertical** | Theo columns | avatar_blob → table riêng |\n| **Functional** | Theo index/table group | Hot data vs Cold data |\n\n### Horizontal Partitioning (phổ biến nhất):\n\n```sql\n-- Range partitioning theo thời gian\nCREATE TABLE orders (\n    id INT, created_at DATE, ...\n) PARTITION BY RANGE (created_at) (\n    PARTITION p2024 VALUES LESS THAN ('2025-01-01'),\n    PARTITION p2025 VALUES LESS THAN ('2026-01-01')\n);\n-- Query 2024 → chỉ scan p2024, bỏ qua p2025!\n```\n\n### Vertical Partitioning:\n\n```mermaid\nflowchart LR\n    T1[(\"users: id, name, email,\\navatar_blob 5MB\")]\n    T1 -->|\"Tách\"| T2[(\"users_core\\nid, name, email\")]\n    T1 -->|\"Tách\"| T3[(\"users_media\\navatar_blob\")]\n```"
+    },
+    {
+      "id": 43,
+      "type": "article",
+      "title": "Phase 8: Partitioning vs Sharding",
+      "emoji": "⚖️",
+      "content": "### Nhìn 3 giây là hiểu!\n\n```mermaid\nflowchart TB\n    subgraph PART[\"📦 PARTITIONING\"]\n        DB1[(\"🗄️ 1 Database\")]\n        DB1 --> P1[\"Part 1\"]\n        DB1 --> P2[\"Part 2\"]\n        DB1 --> P3[\"Part 3\"]\n    end\n    subgraph SHARD[\"🔀 SHARDING\"]\n        S1[(\"🗄️ DB 1\")]\n        S2[(\"🗄️ DB 2\")]\n        S3[(\"🗄️ DB 3\")]\n    end\n```\n\n| | Partitioning | Sharding |\n|--|--------------|----------|\n| **Vị trí** | 1 DB instance | Nhiều DB độc lập |\n| **Routing** | DB tự handle ✅ | App phải handle |\n| **JOIN** | OK ✅ | Rất khó ❌ |\n| **Scale** | Nhẹ | **Scale-out thật sự** |\n\n> 🎯 **Partitioning = bảng to. Sharding = DB quá tải.**"
+    },
+    {
+      "id": 44,
+      "type": "quiz",
+      "quizId": "q-partition-shard",
+      "title": "🎯 Quiz: Partitioning vs Sharding",
+      "question": "Lợi ích chính của Sharding so với Partitioning là gì?",
+      "options": [
+        "Dễ implement hơn và ít phức tạp",
+        "Cho phép scale-out thật sự với nhiều DB nodes độc lập",
+        "JOIN giữa các tables dễ dàng hơn",
+        "DB engine tự động routing, không cần app xử lý"
+      ],
+      "correctOption": 1,
+      "timeLimit": 20,
+      "explanation": "Sharding cho phép scale-out thật sự bằng cách chia data ra nhiều DB instances độc lập, mỗi node có hardware riêng. Partitioning chỉ optimize trong 1 DB nên không scale-out được. Trade-off: sharding phức tạp hơn nhiều!"
+    },
+    {
+      "id": 45,
       "type": "article",
       "title": "Phase 8: Tổng kết DB Scaling",
       "emoji": "📈",
-      "content": "### Database Scaling Strategies:\n\n```mermaid\nflowchart TB\n    P[\"🤔 DB chậm?\"] --> R{\"READ hay WRITE?\"}\n    R -->|\"READ heavy\"| REP[\"📖 Replication\\n(Add Followers)\"]\n    R -->|\"WRITE heavy\"| SH[\"🔀 Sharding\\n(Split Data)\"]\n    R -->|\"Both\"| BOTH[\"Replication + Sharding\"]\n    \n    P --> S{\"Data quá lớn?\"}\n    S -->|\"Rows quá nhiều\"| HSH[\"Horizontal Sharding\"]\n    S -->|\"Columns quá nhiều\"| VSH[\"Vertical Partitioning\"]\n```\n\n### Thứ tự scale:\n\n1. **Indexing** - 90% cases đủ rồi!\n2. **Caching** - Giảm load xuống DB\n3. **Replication** - Scale reads\n4. **Sharding** - Scale writes (cuối cùng!)\n\n> **⚠️ Sharding là giải pháp CUỐI CÙNG, không phải đầu tiên!**"
+      "content": "### Database Scaling Strategies:\n\n```mermaid\nflowchart TB\n    P[\"🤔 DB chậm?\"] --> R{\"READ hay WRITE?\"}\n    R -->|\"READ heavy\"| REP[\"📖 Replication\\n(Add Followers)\"]\n    R -->|\"WRITE heavy\"| SH[\"🔀 Sharding\\n(Split Data)\"]\n    R -->|\"Both\"| BOTH[\"Replication + Sharding\"]\n    \n    P --> S{\"Data quá lớn?\"}\n    S -->|\"Bảng to, 1 DB đủ\"| PART[\"📊 Partitioning\"]\n    S -->|\"DB quá tải\"| HSH[\"🔀 Sharding\"]\n```\n\n### Thứ tự scale:\n\n1. **Indexing** - 90% cases đủ rồi!\n2. **Caching** - Giảm load xuống DB\n3. **Partitioning** - Tối ưu bảng lớn\n4. **Replication** - Scale reads\n5. **Sharding** - Scale writes (cuối cùng!)\n\n> **⚠️ Sharding là giải pháp CUỐI CÙNG, không phải đầu tiên!**"
     },
     {
-      "id": 40,
+      "id": 46,
       "type": "ordering-quiz",
       "quizId": "q-order-1",
       "title": "🎯 Quiz: Sắp xếp thứ tự Scale DB",
@@ -373,49 +426,56 @@
       "explanation": "Thứ tự đúng: Indexing (90% đủ rồi!) → Caching → Replication → Sharding. Sharding là giải pháp CUỐI CÙNG vì complexity cao nhất!"
     },
     {
-      "id": 41,
+      "id": 47,
       "type": "article",
       "title": "Phase 9: Khi Monolith quá lớn",
       "emoji": "🏢",
       "content": "### Từ Phase 0-8, ta đã có Monolith có thể scale:\n\n- ✅ Multiple instances + Load balanced\n- ✅ Stateless + Cached\n- ✅ DB replicated + Sharded + HA\n\n### Vấn đề mới (nếu có):\n\n| Triệu chứng | Mô tả |\n|-------------|-------|\n| 🐌 Deploy mất 1 giờ | Codebase quá lớn |\n| 👥 Teams đạp chân nhau | 50+ devs cùng repo |\n| 🔥 1 bug crash tất cả | Không isolate được |\n| 📊 Scale không đều | Payment cần 10x, User cần 1x |\n\n> *Đây là lúc **có thể** cân nhắc Microservices...*"
     },
     {
-      "id": 42,
+      "id": 48,
       "type": "article",
       "title": "Phase 9: Microservices",
       "emoji": "🧩",
       "content": "### Microservices là gì?\n\nTách monolith thành **nhiều services nhỏ**:\n- 🗄️ Database riêng\n- 🚀 Deploy độc lập\n- 📈 Scale riêng\n- 👥 Team riêng\n\n```mermaid\nflowchart TB\n    GW[\"🚪 API Gateway\"] --> US[\"👤 User Service\"]\n    GW --> PS[\"📦 Product Service\"]\n    GW --> OS[\"🛒 Order Service\"]\n    GW --> PY[\"💳 Payment Service\"]\n    \n    US --> DB1[(\"DB\")]\n    PS --> DB2[(\"DB\")]\n    OS --> DB3[(\"DB\")]\n    PY --> DB4[(\"DB\")]\n```"
     },
     {
-      "id": 43,
+      "id": 49,
       "type": "article",
       "title": "Phase 9: API Gateway",
       "emoji": "🚪",
       "content": "### API Gateway - Cửa ngõ duy nhất\n\n```mermaid\nflowchart TB\n    C1[\"📱 Mobile\"] --> GW\n    C2[\"💻 Web\"] --> GW\n    C3[\"🤖 Third-party\"] --> GW\n    GW[\"🚪 API Gateway\"] --> US[\"User\"]\n    GW --> PS[\"Product\"]\n    GW --> OS[\"Order\"]\n```\n\n### Gateway làm gì?\n\n| Chức năng | Mô tả |\n|-----------|-------|\n| 🔀 **Routing** | Route requests đến đúng service |\n| 🔒 **Authentication** | Verify JWT/API keys tập trung |\n| ⚡ **Rate limiting** | Chống abuse, DDoS |\n| 📊 **Logging/Metrics** | Centralized observability |\n| 🔄 **Protocol translation** | REST ↔ gRPC, WebSocket |\n\n### Tools: **Kong**, **AWS API Gateway**, **Nginx**, **Traefik**"
     },
     {
-      "id": 44,
+      "id": 50,
       "type": "article",
       "title": "Phase 9: BFF Pattern",
       "emoji": "🎨",
       "content": "### Backend For Frontend - API riêng cho từng client\n\n```mermaid\nflowchart TB\n    M[\"📱 Mobile App\"] --> BFF1[\"📱 Mobile BFF\"]\n    W[\"💻 Web App\"] --> BFF2[\"💻 Web BFF\"]\n    BFF1 & BFF2 --> US[\"User Service\"]\n    BFF1 & BFF2 --> PS[\"Product Service\"]\n    BFF1 & BFF2 --> OS[\"Order Service\"]\n```\n\n### Tại sao cần BFF?\n\n| Client | Needs |\n|--------|-------|\n| 📱 **Mobile** | Ít data, tiết kiệm bandwidth |\n| 💻 **Web** | Nhiều data hơn, rich UI |\n| 📺 **TV App** | UI đơn giản, ít fields |\n\n### BFF giải quyết:\n- ✅ **Aggregate** data từ nhiều services\n- ✅ **Transform** response cho từng platform\n- ✅ **Optimize** payload size cho mobile\n- ✅ **Decouple** frontend khỏi backend services"
     },
     {
-      "id": 45,
+      "id": 51,
       "type": "article",
       "title": "Phase 9: Gateway vs BFF",
       "emoji": "⚖️",
       "content": "### Khi nào dùng gì?\n\n| | API Gateway | BFF |\n|--|-------------|-----|\n| **Focus** | Cross-cutting concerns | Client-specific logic |\n| **Số lượng** | 1 (hoặc ít) | 1 per client type |\n| **Logic** | Routing, auth, rate limit | Aggregation, transformation |\n| **Team own** | Platform/DevOps | Frontend teams |\n\n### Có thể kết hợp cả hai!\n\n```\n📱 Mobile → 🚪 Gateway → 📱 Mobile BFF → Services\n💻 Web    → 🚪 Gateway → 💻 Web BFF    → Services\n```\n\n### Kết hợp:\n- **Gateway**: Auth, rate limiting, SSL termination\n- **BFF**: Data aggregation, response shaping"
     },
     {
-      "id": 46,
+      "id": 52,
+      "type": "article",
+      "title": "Phase 9: Circuit Breaker Pattern",
+      "emoji": "🔌",
+      "content": "### Khi downstream service down, đừng để cascade failure!\n\n```mermaid\nstateDiagram-v2\n    [*] --> Closed\n    Closed --> Open: Failures > threshold\n    Open --> HalfOpen: Timeout expired\n    HalfOpen --> Closed: Success\n    HalfOpen --> Open: Failure\n```\n\n| State | Behavior |\n|-------|----------|\n| **Closed** | Hoạt động bình thường |\n| **Open** | Fail fast, không gọi downstream |\n| **Half-Open** | Thử lại 1 request |\n\n### Ví dụ:\n\n```\n🛒 Order → 💳 Payment (down!)\n   ↓\n🔌 Circuit OPEN\n   ↓\n\"Payment unavailable, try later\"\n   (thay vì chờ timeout 30s mỗi request)\n```"
+    },
+    {
+      "id": 53,
       "type": "article",
       "title": "Phase 9: Cảnh báo!",
       "emoji": "🚨",
-      "content": "### ⚠️ Microservices tăng complexity 10x!\n\n> *\"You're not Netflix. I'm not Netflix.\"* — Martin Joo\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người maintain |\n| ❌ Startup giai đoạn đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps maturity | K8s, monitoring phức tạp |\n| ❌ Monolith chưa gặp vấn đề | Đừng fix cái không hỏng! |\n\n### Problems phải giải quyết:\n\n- 🔗 Service-to-service communication\n- 📊 Distributed tracing\n- 🔄 Data consistency across services\n- 🐛 Debugging distributed systems"
+      "content": "### ⚠️ Microservices tăng complexity 10x!\n\n> *\"You're not Netflix. I'm not Netflix.\"*\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người |\n| ❌ Startup đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps | K8s phức tạp |\n| ❌ Monolith chưa vấn đề | Đừng fix cái không hỏng! |"
     },
     {
-      "id": 47,
+      "id": 54,
       "type": "quiz",
       "quizId": "q9",
       "title": "🎯 Quiz: Microservices",
@@ -431,7 +491,7 @@
       "explanation": "Circuit breaker + caching! Microservices cần resilience: cache data cần thiết, graceful degradation khi downstream fail. Không bao giờ access DB của service khác trực tiếp!"
     },
     {
-      "id": 48,
+      "id": 55,
       "type": "quiz",
       "quizId": "q10",
       "title": "🎯 Final Quiz",
@@ -447,25 +507,32 @@
       "explanation": "YAGNI! (You Aren't Gonna Need It). Startup cần ship nhanh, validate idea. Monolith đơn giản dễ develop/debug/deploy. Chỉ tách khi thực sự có vấn đề về scale. 90% companies không cần microservices!"
     },
     {
-      "id": 49,
+      "id": 56,
+      "type": "article",
+      "title": "📋 Checklist: 0 → 10,000 Users",
+      "emoji": "✅",
+      "content": "### Roadmap scale theo số users:\n\n| Users | Stack | Focus |\n|-------|-------|-------|\n| **0–100** | Monolith + 1 DB | Ship nhanh, validate idea |\n| **100–1K** | + Queue + Worker | Background jobs |\n| **1K–5K** | + Horizontal + LB | Fault tolerance |\n| **5K–10K** | + CDN + Cache + Replica | Performance |\n| **10K+** | + Sharding (nếu cần) | Scale writes |\n\n### Rule of thumb:\n\n```\n✅ Job > 200-300ms → Queue\n✅ Static assets → CDN\n✅ Hot data → Cache\n✅ Read heavy → Replication\n✅ Write heavy → Sharding (cuối cùng!)\n```\n\n> 🎯 **Đừng over-engineer. Scale khi CẦN, không phải khi MUỐN.**"
+    },
+    {
+      "id": 57,
       "type": "summary",
       "title": "Tổng kết System Design Journey",
       "emoji": "📝",
       "points": [
         "🌱 Phase 0: Monolith đơn giản - start here!",
-        "📬 Phase 1: Job Queue cho long-running tasks",
+        "📬 Phase 1: Job Queue cho long-running tasks (>200ms)",
         "🔀 Phase 2: Tách Worker để scale độc lập",
         "📈 Phase 3: Horizontal Scaling khi 1 server không đủ",
         "⚖️ Phase 4: Load Balancer phân tải traffic",
         "☁️ Phase 5: Stateless - externalize state (S3, Redis)",
         "⚡ Phase 6: Caching giảm DB load",
         "🌍 Phase 7: CDN cho static assets",
-        "🗃️ Phase 8: DB Replication + Sharding",
-        "🧩 Phase 9: Microservices + API Gateway + BFF"
+        "🗃️ Phase 8: CAP + Replication + Partitioning + Sharding",
+        "🧩 Phase 9: Microservices + Circuit Breaker + BFF"
       ]
     },
     {
-      "id": 50,
+      "id": 58,
       "type": "leaderboard",
       "title": "🏆 System Design Champions",
       "emoji": "🏆",
@@ -523,21 +590,35 @@
       "timeLimit": 20
     },
     {
-      "slideId": 37,
+      "slideId": 36,
+      "question": "E-commerce: Khi checkout, hệ thống cần check số lượng tồn kho. Network partition xảy ra giữa 2 nodes. Nên chọn CP hay AP?",
+      "options": ["AP - user cần checkout được, tồn kho sai vài cái không sao", "CP - phải đảm bảo tồn kho chính xác, chấp nhận timeout/error", "Không cần chọn, dùng cache là xong", "AP cho read, CP cho write"],
+      "correctOption": 1,
+      "timeLimit": 20
+    },
+    {
+      "slideId": 40,
       "question": "E-commerce: 100M users, 500M orders. Muốn query 'tất cả orders của 1 user' nhanh nhất. Shard key nào tốt nhất?",
       "options": ["order_id - vì orders nhiều hơn", "user_id - vì query theo user", "created_at - vì hay sort theo thời gian", "product_id - vì hay filter theo product"],
       "correctOption": 1,
       "timeLimit": 20
     },
     {
-      "slideId": 47,
+      "slideId": 44,
+      "question": "Lợi ích chính của Sharding so với Partitioning là gì?",
+      "options": ["Dễ implement hơn và ít phức tạp", "Cho phép scale-out thật sự với nhiều DB nodes độc lập", "JOIN giữa các tables dễ dàng hơn", "DB engine tự động routing, không cần app xử lý"],
+      "correctOption": 1,
+      "timeLimit": 20
+    },
+    {
+      "slideId": 54,
       "question": "Order Service cần data từ User Service và Product Service. Cả 2 services đều down. Order Service nên làm gì?",
       "options": ["Crash luôn và báo lỗi 500", "Cache data từ các services khác, dùng cached data khi downstream down", "Chờ đến khi services khác up", "Gọi trực tiếp vào database của User/Product Service"],
       "correctOption": 1,
       "timeLimit": 25
     },
     {
-      "slideId": 48,
+      "slideId": 55,
       "question": "Startup 5 devs, MVP giai đoạn đầu, chưa có users. CTO muốn dùng K8s + microservices + Kafka từ ngày 1. Bạn sẽ nói gì?",
       "options": ["Đồng ý, chuẩn bị cho scale từ đầu là tốt", "Phản đối, start với monolith đơn giản, thêm complexity khi cần", "Đề xuất dùng serverless thay vì K8s", "Đồng ý nhưng bỏ Kafka"],
       "correctOption": 1,

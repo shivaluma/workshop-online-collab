@@ -147,7 +147,7 @@ export const systemDesign101Notes: Record<number, string> = {
 - ⚠️ Files, Sessions, Cache trên local = vấn đề`,
 
   // Slide 21: Giải pháp Stateless
-  21: `- **Rule vàng**: Tất cả servers phải GIỐNG HỆT NHAU
+  21: `- **Golden rule**: Tất cả servers phải GIỐNG HỆT NHAU
 - Giải pháp:
   - Files → AWS S3, MinIO
   - Sessions → Redis, Database
