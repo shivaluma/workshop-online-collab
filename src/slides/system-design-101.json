@@ -29,7 +29,7 @@
       "type": "article",
       "title": "Phase 0: Khởi đầu đơn giản",
       "emoji": "🌱",
-      "content": "![Phase 0 Architecture](https://martinjoo.dev/_nuxt/img/1.b0dd624.png)\n\nKhi bắt đầu project, kiến trúc thường đơn giản như thế này:\n\n- **Frontend**: Web app, mobile app, hoặc desktop app\n- **Backend**: API server + Database\n\n### Đặc điểm:\n- ✅ Đơn giản, dễ setup và deploy\n- ✅ Hoạt động tốt khi traffic thấp\n- ✅ Dễ debug - mọi thứ ở 1 chỗ\n\n> Kiến trúc này phù hợp với **startup giai đoạn đầu** hoặc **internal tools** với vài chục users.\n\n*Nó hoạt động tốt... cho đến khi bạn gặp một số vấn đề.*"
+      "content": "```mermaid\nflowchart TB\n    Actor[\"👤 Actor\"] --> FE[\"🖥️ Frontend\"]\n    FE --> API[\"⚙️ API\"]\n    API --> DB[(\"🗄️ DB\")]\n    \n    style FE fill:#fcd9bd,stroke:#f59e0b\n    style API fill:#bbf7d0,stroke:#22c55e\n    style DB fill:#fef08a,stroke:#eab308\n```\n\nKhi bắt đầu project, kiến trúc thường đơn giản như thế này:\n\n- **Frontend**: Web app, mobile app, hoặc desktop app\n- **Backend**: API server + Database\n\n### Đặc điểm:\n- ✅ Đơn giản, dễ setup và deploy\n- ✅ Hoạt động tốt khi traffic thấp\n- ✅ Dễ debug - mọi thứ ở 1 chỗ\n\n> Kiến trúc này phù hợp với **startup giai đoạn đầu** hoặc **internal tools** với vài chục users.\n\n*Nó hoạt động tốt... cho đến khi bạn gặp một số vấn đề.*"
     },
     {
       "id": 4,
@@ -80,7 +80,7 @@
       "type": "article",
       "title": "Phase 1: Setup đơn giản nhất",
       "emoji": "🖥️",
-      "content": "![Phase 1 Architecture](https://martinjoo.dev/_nuxt/img/2.543ab67.png)\n\n### Setup ban đầu:\n\nMột server duy nhất chạy **2 processes**:\n1. 🖥️ API server (nginx/express)\n2. ⚙️ Worker process\n\n### Ưu điểm:\n- ✅ **Không block** user requests với long-running tasks\n- ✅ Setup **cực kỳ đơn giản** - không cần thêm server\n- ✅ Chi phí thấp - chỉ 1 server\n\n> *Đây là setup phổ biến nhất cho projects nhỏ với vài chục jobs mỗi ngày.*"
+      "content": "```mermaid\nflowchart TB\n    Actor[\"👤 Actor\"] --> FE[\"🖥️ Frontend\"]\n    FE --> API[\"⚙️ API\"]\n    API --> DB[(\"🗄️ DB\")]\n    API --> W[\"🔧 worker\"]\n    W --> Q[(\"📬 queue\")]\n    \n    style FE fill:#fcd9bd,stroke:#f59e0b\n    style API fill:#bbf7d0,stroke:#22c55e\n    style DB fill:#fef08a,stroke:#eab308\n    style Q fill:#fecaca,stroke:#ef4444\n    style W fill:#e5e7eb,stroke:#6b7280\n```\n\n### Setup ban đầu:\n\nMột server duy nhất chạy **2 processes**:\n1. 🖥️ API server (nginx/express)\n2. ⚙️ Worker process\n\n### Ưu điểm:\n- ✅ **Không block** user requests với long-running tasks\n- ✅ Setup **cực kỳ đơn giản** - không cần thêm server\n- ✅ Chi phí thấp - chỉ 1 server\n\n> *Đây là setup phổ biến nhất cho projects nhỏ với vài chục jobs mỗi ngày.*"
     },
     {
       "id": 10,
@@ -94,7 +94,7 @@
       "type": "article",
       "title": "Phase 2: Tách Worker riêng",
       "emoji": "🔀",
-      "content": "![Phase 2 Architecture](https://martinjoo.dev/_nuxt/img/3.859e47b.png)\n\n### Giải pháp: Tách API và Worker ra nodes riêng!\n\n```mermaid\nflowchart TB\n    subgraph Server_1[\"🖥️ Server 1 - API\"]\n        A[\"API Server\"]\n    end\n    subgraph Server_2[\"🖥️ Server 2 - Workers\"]\n        W1[\"⚙️ Worker 1\"]\n        W2[\"⚙️ Worker 2\"]\n    end\n    Q[(\"📬 Queue\")]\n    DB[(\"🗄️ Database\")]\n    \n    A --> Q\n    Q --> W1 & W2\n    A --> DB\n    W1 & W2 --> DB\n```\n\n### Kết quả:\n- 🖥️ **Server 1**: Chỉ serve API → 100% resources cho users\n- ⚙️ **Server 2**: Chỉ chạy Workers → thoải mái dùng CPU/RAM\n- ✅ **Scale độc lập!**"
+      "content": "```mermaid\nflowchart TB\n    Actor[\"👤 Actor\"] --> FE[\"🖥️ Frontend\"]\n    FE --> API1[\"⚙️ API\"]\n    FE --> API2[\"⚙️ API\"]\n    FE --> API3[\"⚙️ API\"]\n    API1 & API2 & API3 --> DB[(\"🗄️ DB\")]\n    API1 & API2 & API3 --> Q[(\"📬 queue\")]\n    Q --> W1[\"🔧 worker\"]\n    Q --> W2[\"🔧 worker\"]\n    Q --> W3[\"🔧 worker\"]\n    W1 & W2 & W3 --> DB\n    \n    style FE fill:#fcd9bd,stroke:#f59e0b\n    style API1 fill:#bbf7d0,stroke:#22c55e\n    style API2 fill:#bbf7d0,stroke:#22c55e\n    style API3 fill:#bbf7d0,stroke:#22c55e\n    style DB fill:#fef08a,stroke:#eab308\n    style Q fill:#fecaca,stroke:#ef4444\n    style W1 fill:#bfdbfe,stroke:#3b82f6\n    style W2 fill:#bfdbfe,stroke:#3b82f6\n    style W3 fill:#bfdbfe,stroke:#3b82f6\n```\n\n### Giải pháp: Tách API và Worker ra nodes riêng!\n\n### Kết quả:\n- 🖥️ **API Servers**: Scale để handle nhiều requests\n- ⚙️ **Worker Servers**: Scale riêng cho background jobs\n- ✅ **Scale độc lập!**"
     },
     {
       "id": 12,
@@ -124,7 +124,7 @@
       "type": "article",
       "title": "Phase 3: Horizontal Scaling",
       "emoji": "📈",
-      "content": "![Phase 3 Architecture](https://martinjoo.dev/_nuxt/img/4.5f9791d.png)\n\n### Tại sao Horizontal?\n\n| Vertical | Horizontal |\n|----------|------------|\n| 🏋️ 1 người cực khỏe | 👥 10 người bình thường |\n| Người đó ốm = stop | 1 người ốm = 9 người làm tiếp |\n\n### Ví dụ cụ thể:\n\n**Cùng capacity 6 cores + 12GB RAM:**\n\n| Approach | Setup | Khi 1 server die |\n|----------|-------|------------------|\n| Vertical | 1 server $100/m | ❌ **Chết hết** |\n| Horizontal | 3 servers $35/m each | ✅ 2 servers còn chạy |\n\n### Nhưng có vấn đề: **Frontend gọi server nào?**"
+      "content": "### Tại sao Horizontal?\n\n| Vertical | Horizontal |\n|----------|------------|\n| 🏋️ 1 người cực khỏe | 👥 10 người bình thường |\n| Người đó ốm = stop | 1 người ốm = 9 người làm tiếp |\n\n### Ví dụ cụ thể:\n\n**Cùng capacity 6 cores + 12GB RAM:**\n\n| Approach | Setup | Khi 1 server die |\n|----------|-------|------------------|\n| Vertical | 1 server $100/m | ❌ **Chết hết** |\n| Horizontal | 3 servers $35/m each | ✅ 2 servers còn chạy |\n\n### Nhưng có vấn đề: **Frontend gọi server nào?**"
     },
     {
       "id": 15,
@@ -138,7 +138,7 @@
       "type": "article",
       "title": "Phase 4: Load Balancing Algorithms",
       "emoji": "🔄",
-      "content": "### Các thuật toán phân tải:\n\n| Algorithm | Cách hoạt động | Use case |\n|-----------|---------------|----------|\n| **Round Robin** | Lần lượt A→B→C→A... | Servers giống nhau |\n| **Least Connections** | Gửi đến server ít connections nhất | Requests không đều |\n| **IP Hash** | Cùng IP → cùng server | Cần sticky session |\n| **Weighted** | Server mạnh nhận nhiều hơn | Servers khác nhau |\n\n```mermaid\nsequenceDiagram\n    participant LB as ⚖️ Load Balancer\n    participant A as Server A\n    participant B as Server B\n    participant C as Server C\n    \n    LB->>A: Request 1\n    LB->>B: Request 2\n    LB->>C: Request 3\n    LB->>A: Request 4 (vòng lại)\n```\n\n### Round Robin Problem:\n\n![Round Robin Problem](/public/round-robin-problem.gif)\n\n### Weighted Round Robin:\n\n![Weighted Round Robin](/public/weighted-round-robin.gif)\n\n### Tools: **nginx**, **HAProxy**, **Traefik**, **AWS ALB**"
+      "content": "### Các thuật toán phân tải:\n\n| Algorithm | Cách hoạt động | Use case |\n|-----------|---------------|----------|\n| **Round Robin** | Lần lượt A→B→C→A... | Servers giống nhau |\n| **Least Connections** | Gửi đến server ít connections nhất | Requests không đều |\n| **IP Hash** | Cùng IP → cùng server | Cần sticky session |\n| **Weighted** | Server mạnh nhận nhiều hơn | Servers khác nhau |\n\n```mermaid\nsequenceDiagram\n    participant LB as ⚖️ Load Balancer\n    participant A as Server A\n    participant B as Server B\n    participant C as Server C\n    \n    LB->>A: Request 1\n    LB->>B: Request 2\n    LB->>C: Request 3\n    LB->>A: Request 4 (vòng lại)\n```\n\n### Round Robin Problem:\n\n![Round Robin Problem](/round-robin-problem.gif)\n\n### Weighted Round Robin:\n\n![Weighted Round Robin](/weighted-round-robin.gif)\n\n### Tools: **nginx**, **HAProxy**, **Traefik**, **AWS ALB**"
     },
     {
       "id": 17,
@@ -168,7 +168,7 @@
       "type": "article",
       "title": "Phase 5: Stateless Architecture",
       "emoji": "☁️",
-      "content": "![Phase 5 Architecture](https://martinjoo.dev/_nuxt/img/7.b831e0d.png)\n\n### Golden rule: Tất cả servers phải GIỐNG HỆT NHAU!\n\n### Giải pháp: Chuyển state ra external services\n\n| Local State | External Solution |\n|-------------|------------------|\n| 📁 **Files** | AWS S3, MinIO, GCS |\n| 🍪 **Sessions** | Redis, Database |\n| 💾 **Cache** | Redis, Memcached |\n\n```mermaid\nflowchart LR\n    S1[\"🖥️ Server 1\"] --> S3[(\"☁️ S3 Bucket\")]\n    S2[\"🖥️ Server 2\"] --> S3\n    S3 --> S1\n    S3 --> S2\n```\n\n> **Kết quả**: Tất cả servers đều access được cùng data!"
+      "content": "### Golden rule: Tất cả servers phải GIỐNG HỆT NHAU!\n\n```mermaid\nflowchart TB\n    LB[\"⚖️ Load Balancer\"] --> S1[\"🖥️ Server 1\"]\n    LB --> S2[\"🖥️ Server 2\"]\n    LB --> S3[\"🖥️ Server 3\"]\n    S1 & S2 & S3 --> DB[(\"🗄️ Database\")]\n    S1 & S2 & S3 --> Redis[(\"⚡ Redis\")]\n    S1 & S2 & S3 --> Storage[(\"☁️ S3/MinIO\")]\n    \n    style LB fill:#8b5cf6,stroke:#6d28d9,color:#fff\n    style Storage fill:#fcd9bd,stroke:#f59e0b\n    style Redis fill:#fecaca,stroke:#ef4444\n```\n\n### Giải pháp: Chuyển state ra external services\n\n| Local State | External Solution |\n|-------------|------------------|\n| 📁 **Files** | AWS S3, MinIO, GCS |\n| 🍪 **Sessions** | Redis, Database |\n| 💾 **Cache** | Redis, Memcached |\n\n> **Kết quả**: Tất cả servers đều access được cùng data!"
     },
     {
       "id": 20,
@@ -330,26 +330,40 @@
     {
       "id": 37,
       "type": "article",
+      "title": "Phase 8: Partitioning là gì?",
+      "emoji": "🗂️",
+      "content": "### Partitioning = Chia table trong cùng 1 database\n\n```mermaid\nflowchart TB\n    DB[(\"🗄️ Database Instance\")]\n    DB --> P1[(\"📂 Partition 1\\nuser_id 1-1M\")]\n    DB --> P2[(\"📂 Partition 2\\nuser_id 1M-2M\")]\n    DB --> P3[(\"📂 Partition 3\\nuser_id 2M-3M\")]\n    \n    style DB fill:#3b82f6,stroke:#2563eb\n```\n\n### Đặc điểm:\n\n| Điểm | Mô tả |\n|------|-------|\n| 📍 **Vị trí** | Cùng 1 DB instance / cluster |\n| 🔀 **Routing** | DB engine tự động route query |\n| ⚡ **Query** | Partition pruning - chỉ scan phần cần |\n| 🗃️ **Mục đích** | Quản lý data lớn, archival dễ, giảm contention |\n\n> **Partitioning giúp tối ưu hiệu năng trong 1 database, nhưng KHÔNG scale-out được!**"
+    },
+    {
+      "id": 38,
+      "type": "article",
+      "title": "Phase 8: Các loại Partitioning",
+      "emoji": "📊",
+      "content": "### 3 loại Partitioning chính:\n\n| Loại | Cách chia | Ví dụ |\n|------|-----------|-------|\n| **Horizontal** | Theo rows (range/hash/list) | user_id 1-1M → Partition A |\n| **Vertical** | Theo columns | avatar_blob → table riêng |\n| **Functional** | Theo index/table group | Hot data vs Cold data |\n\n### Horizontal Partitioning (phổ biến nhất):\n\n```sql\n-- Range partitioning theo thời gian\nCREATE TABLE orders (\n    id INT, created_at DATE, ...\n) PARTITION BY RANGE (created_at) (\n    PARTITION p2024 VALUES LESS THAN ('2025-01-01'),\n    PARTITION p2025 VALUES LESS THAN ('2026-01-01')\n);\n-- Query 2024 → chỉ scan p2024, bỏ qua p2025!\n```\n\n### Vertical Partitioning:\n\n```mermaid\nflowchart LR\n    T1[(\"users: id, name, email,\\navatar_blob 5MB\")]\n    T1 -->|\"Tách\"| T2[(\"users_core\\nid, name, email\")]\n    T1 -->|\"Tách\"| T3[(\"users_media\\navatar_blob\")]\n```"
+    },
+    {
+      "id": 39,
+      "type": "article",
       "title": "Phase 8: Sharding - Khi 1 DB không đủ",
       "emoji": "🔀",
       "content": "### Replication giải quyết READ, nhưng WRITE thì sao?\n\n| Vấn đề | Replication giải quyết? |\n|--------|------------------------|\n| READ scale | ✅ Thêm followers |\n| High Availability | ✅ Failover |\n| WRITE scale | ❌ Vẫn 1 Leader! |\n| Data quá lớn | ❌ Mỗi node full copy |\n\n### Khi nào cần Sharding?\n\n- 📊 Data > 1TB, 1 server không chứa nổi\n- ✍️ Write-heavy workload (10K+ writes/sec)\n- 🌍 Geo-distributed users cần low latency\n\n> **Sharding = Chia data ra nhiều databases!**"
     },
     {
-      "id": 38,
+      "id": 40,
       "type": "article",
       "title": "Phase 8: Sharding Strategies",
       "emoji": "🗂️",
       "content": "### Horizontal Partitioning (Sharding)\n\n```mermaid\nflowchart TB\n    API[\"🖥️ API\"] --> R[\"🔀 Router\"]\n    R -->|\"user_id 1-1M\"| S1[(\"🗄️ Shard 1\")]\n    R -->|\"user_id 1M-2M\"| S2[(\"🗄️ Shard 2\")]\n    R -->|\"user_id 2M-3M\"| S3[(\"🗄️ Shard 3\")]\n    \n    style S1 fill:#3b82f6,stroke:#2563eb\n    style S2 fill:#10b981,stroke:#059669\n    style S3 fill:#f59e0b,stroke:#d97706\n```\n\n### Shard Key Strategies:\n\n| Strategy | Ví dụ | Ưu điểm | Nhược điểm |\n|----------|-------|---------|------------|\n| **Range** | user_id 1-1M | Dễ implement | Hot spots |\n| **Hash** | hash(user_id) % 3 | Phân bố đều | Range query khó |\n| **Geo** | region = 'VN' | Low latency | Uneven distribution |"
     },
     {
-      "id": 39,
+      "id": 41,
       "type": "article",
       "title": "Phase 8: Sharding Challenges",
       "emoji": "⚠️",
       "content": "### Sharding KHÔNG miễn phí!\n\n| Challenge | Mô tả |\n|-----------|-------|\n| 🔗 **Cross-shard queries** | JOIN giữa shards = nightmare |\n| 🔄 **Resharding** | Thêm shard = migrate TB data |\n| 🆔 **Global unique IDs** | Auto-increment không work |\n| 📊 **Aggregations** | COUNT(*) cần query tất cả shards |\n\n### Ví dụ Cross-shard Problem:\n\n```sql\n-- User ở Shard 1, Orders ở Shard 2\n-- Query này KHÔNG THỂ chạy đơn giản!\nSELECT users.name, orders.total\nFROM users\nJOIN orders ON users.id = orders.user_id\n```\n\n> **Rule**: Shard theo data access pattern, không phải random!"
     },
     {
-      "id": 40,
+      "id": 42,
       "type": "quiz",
       "quizId": "q8",
       "title": "🎯 Quiz: Sharding",
@@ -363,20 +377,6 @@
       "correctOption": 1,
       "timeLimit": 20,
       "explanation": "Shard theo user_id! Tất cả orders của 1 user nằm cùng shard → query nhanh, không cần cross-shard. Shard key phải match access pattern phổ biến nhất."
-    },
-    {
-      "id": 41,
-      "type": "article",
-      "title": "Phase 8: Partitioning là gì?",
-      "emoji": "🗂️",
-      "content": "### Partitioning = Chia table trong cùng 1 database\n\n```mermaid\nflowchart TB\n    DB[(\"🗄️ Database Instance\")]\n    DB --> P1[(\"📂 Partition 1\\nuser_id 1-1M\")]\n    DB --> P2[(\"📂 Partition 2\\nuser_id 1M-2M\")]\n    DB --> P3[(\"📂 Partition 3\\nuser_id 2M-3M\")]\n    \n    style DB fill:#3b82f6,stroke:#2563eb\n```\n\n### Đặc điểm:\n\n| Điểm | Mô tả |\n|------|-------|\n| 📍 **Vị trí** | Cùng 1 DB instance / cluster |\n| 🔀 **Routing** | DB engine tự động route query |\n| ⚡ **Query** | Partition pruning - chỉ scan phần cần |\n| 🗃️ **Mục đích** | Quản lý data lớn, archival dễ, giảm contention |\n\n> **Partitioning giúp tối ưu hiệu năng trong 1 database, nhưng KHÔNG scale-out được!**"
-    },
-    {
-      "id": 42,
-      "type": "article",
-      "title": "Phase 8: Các loại Partitioning",
-      "emoji": "📊",
-      "content": "### 3 loại Partitioning chính:\n\n| Loại | Cách chia | Ví dụ |\n|------|-----------|-------|\n| **Horizontal** | Theo rows (range/hash/list) | user_id 1-1M → Partition A |\n| **Vertical** | Theo columns | avatar_blob → table riêng |\n| **Functional** | Theo index/table group | Hot data vs Cold data |\n\n### Horizontal Partitioning (phổ biến nhất):\n\n```sql\n-- Range partitioning theo thời gian\nCREATE TABLE orders (\n    id INT, created_at DATE, ...\n) PARTITION BY RANGE (created_at) (\n    PARTITION p2024 VALUES LESS THAN ('2025-01-01'),\n    PARTITION p2025 VALUES LESS THAN ('2026-01-01')\n);\n-- Query 2024 → chỉ scan p2024, bỏ qua p2025!\n```\n\n### Vertical Partitioning:\n\n```mermaid\nflowchart LR\n    T1[(\"users: id, name, email,\\navatar_blob 5MB\")]\n    T1 -->|\"Tách\"| T2[(\"users_core\\nid, name, email\")]\n    T1 -->|\"Tách\"| T3[(\"users_media\\navatar_blob\")]\n```"
     },
     {
       "id": 43,
@@ -597,7 +597,7 @@
       "timeLimit": 20
     },
     {
-      "slideId": 40,
+      "slideId": 42,
       "question": "E-commerce: 100M users, 500M orders. Muốn query 'tất cả orders của 1 user' nhanh nhất. Shard key nào tốt nhất?",
       "options": ["order_id - vì orders nhiều hơn", "user_id - vì query theo user", "created_at - vì hay sort theo thời gian", "product_id - vì hay filter theo product"],
       "correctOption": 1,
