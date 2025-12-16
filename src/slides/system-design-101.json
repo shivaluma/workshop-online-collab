@@ -36,7 +36,7 @@
       "type": "article",
       "title": "Phase 0: Vấn đề xuất hiện",
       "emoji": "⚠️",
-      "content": "### Khi nào Phase 0 bắt đầu có vấn đề?\n\nHãy tưởng tượng app của bạn cần:\n\n| Task | Thời gian xử lý |\n|------|----------------|\n| 🖼️ Resize ảnh profile | 1-5 giây |\n| 📧 Gửi email xác nhận | 500ms-2s |\n| 📄 Tạo PDF report | 2-10 giây |\n| 🔄 Đồng bộ với API bên ngoài | 1-30 giây |\n\n### Chuyện gì xảy ra?\n\n```\nUser click \"Upload Avatar\"\n     ↓\nAPI nhận request\n     ↓\nAPI resize ảnh... (5 giây)\n     ↓\nUser nhìn loading spinner 5 giây 😤\n     ↓\nCác users khác cũng phải chờ!\n```\n\n> **Vấn đề**: Những task chạy lâu (>200-300ms) đang **block** cả API server!"
+      "content": "### Khi nào Phase 0 bắt đầu có vấn đề?\n\nHãy tưởng tượng app của bạn cần:\n\n| Task | Thời gian xử lý |\n|------|----------------|\n| 🖼️ Resize ảnh profile | 1-5 giây |\n| 📧 Gửi email xác nhận | 500ms-2s |\n| 📄 Tạo PDF report | 2-10 giây |\n| 🔄 Đồng bộ với API bên ngoài | 1-30 giây |\n\n### Chuyện gì xảy ra?\n\n```mermaid\nsequenceDiagram\n    participant U as 👤 User A\n    participant U2 as 👥 Users khác\n    participant API as 🖥️ API\n    \n    U->>API: Upload Avatar\n    Note over API: Resize ảnh...\n    Note over API: ⏳ 5 giây\n    U2->>API: Request homepage\n    Note over U2,API: ❌ Blocked! Phải chờ...\n    API-->>U: Done!\n    API-->>U2: Response (chậm 5s)\n```\n\n> **Vấn đề**: Những task chạy lâu (>200-300ms) đang **block** cả API server!"
     },
     {
       "id": 5,
@@ -80,14 +80,14 @@
       "type": "article",
       "title": "Phase 1: Setup đơn giản nhất",
       "emoji": "🖥️",
-      "content": "```mermaid\nflowchart TB\n    Actor[\"👤 Actor\"] --> FE[\"🖥️ Frontend\"]\n    FE --> API[\"⚙️ API\"]\n    API --> DB[(\"🗄️ DB\")]\n    API --> W[\"🔧 worker\"]\n    W --> Q[(\"📬 queue\")]\n    \n    style FE fill:#fcd9bd,stroke:#f59e0b\n    style API fill:#bbf7d0,stroke:#22c55e\n    style DB fill:#fef08a,stroke:#eab308\n    style Q fill:#fecaca,stroke:#ef4444\n    style W fill:#e5e7eb,stroke:#6b7280\n```\n\n### Setup ban đầu:\n\nMột server duy nhất chạy **2 processes**:\n1. 🖥️ API server (nginx/express)\n2. ⚙️ Worker process\n\n### Ưu điểm:\n- ✅ **Không block** user requests với long-running tasks\n- ✅ Setup **cực kỳ đơn giản** - không cần thêm server\n- ✅ Chi phí thấp - chỉ 1 server\n\n> *Đây là setup phổ biến nhất cho projects nhỏ với vài chục jobs mỗi ngày.*"
+      "content": "```mermaid\nflowchart TB\n    Actor[\"👤 Actor\"] --> FE[\"🖥️ Frontend\"]\n    FE --> Server\n    subgraph Server[\"🖥️ 1 Server duy nhất\"]\n        API[\"⚙️ API\"]\n        W[\"🔧 worker\"]\n        Q[(\"📬 queue\")]\n        API --> Q\n        Q --> W\n    end\n    API --> DB[(\"🗄️ DB\")]\n    \n    style FE fill:#fcd9bd,stroke:#f59e0b\n    style API fill:#bbf7d0,stroke:#22c55e\n    style DB fill:#fef08a,stroke:#eab308\n    style Q fill:#fecaca,stroke:#ef4444\n    style W fill:#e5e7eb,stroke:#6b7280\n```\n\n### Setup ban đầu:\n\nMột server duy nhất chạy **2 processes**:\n- 🖥️ API server (nginx/express)\n- ⚙️ Worker process\n\n### Ưu điểm:\n- ✅ **Không block** user requests với long-running tasks\n- ✅ Setup **cực kỳ đơn giản** - không cần thêm server\n- ✅ Chi phí thấp - chỉ 1 server\n\n> *Đây là setup phổ biến nhất cho projects nhỏ với vài chục jobs mỗi ngày.*"
     },
     {
       "id": 10,
       "type": "article",
       "title": "Phase 1 → 2: Vấn đề mới",
       "emoji": "💥",
-      "content": "### Nhưng có một vấn đề...\n\n> Worker và API **chạy chung máy** = **share resources**!\n\n### Tình huống nguy hiểm:\n\n```\n📹 User upload video 1GB\n     ↓\n⚙️ Worker bắt đầu transcoding (cần 80% CPU, 4GB RAM)\n     ↓\n🖥️ API còn lại 20% CPU, 1GB RAM\n     ↓\n👥 100 users khác load homepage\n     ↓\n🐌 Response time: 50ms → 2000ms!\n```\n\n| Thành phần | Resources cần |\n|------------|---------------|\n| API serving 100 users | 30% CPU |\n| Worker transcoding video | 80% CPU |\n| **Tổng cần** | **110%** ❌ |"
+      "content": "### Nhưng có một vấn đề...\n\n> Worker và API **chạy chung máy** = **share resources**!\n\n```mermaid\nflowchart TB\n    subgraph Server[\"🖥️ 1 Server - 100% Resources\"]\n        subgraph Used[\"⚠️ Đang dùng: 110%!\"]\n            API[\"⚙️ API\\n30% CPU\"]\n            Worker[\"🔧 Worker\\n80% CPU\"]\n        end\n    end\n    \n    U1[\"👥 100 Users\"] -->|\"🐌 Chậm!\"| API\n    Video[\"📹 Video 1GB\"] --> Worker\n    \n    style Used fill:#fee2e2,stroke:#dc2626\n```\n\n### Tình huống nguy hiểm:\n\n| Thành phần | Resources cần |\n|------------|---------------|\n| API serving 100 users | 30% CPU |\n| Worker transcoding video | 80% CPU |\n| **Tổng cần** | **110%** ❌ |\n\n> 🐌 Response time: 50ms → 2000ms!"
     },
     {
       "id": 11,
@@ -117,7 +117,7 @@
       "type": "article",
       "title": "Phase 2 → 3: Traffic tăng",
       "emoji": "📈",
-      "content": "### Hệ thống hiện tại:\n\n```\n👥 Users → 🖥️ 1 API Server → 🗄️ Database\n                    ↓\n              📬 Queue → ⚙️ Workers (separate)\n```\n\n### Giờ hãy tưởng tượng:\n\n- 📈 Users tăng từ 100 → 10,000\n- 🔥 API server đang xử lý 1000 requests/second\n- 💀 Server bắt đầu **quá tải**!\n\n### Hai lựa chọn:\n\n| | Vertical ↑ | Horizontal → |\n|--|-----------|-------------|\n| **Cách làm** | Nâng cấp 1 server | Thêm nhiều servers |\n| **Giới hạn** | Có (max RAM/CPU) | Gần như không |\n| **Downtime** | Cần restart | Zero downtime |\n| **Fault tolerance** | ❌ 1 chết = tất cả chết | ✅ 1 chết = còn lại chạy |"
+      "content": "### Hệ thống hiện tại:\n\n```\n👥 Users → 🖥️ 1 API Server → 🗄️ Database\n                    ↓\n              📬 Queue → ⚙️ Workers (separate)\n```\n\n### Giờ hãy tưởng tượng:\n\n- 📈 Users tăng từ 100 → 10,000\n- 🔥 API server đang xử lý 1000 requests/second\n- 💀 Server bắt đầu **quá tải**!\n\n### Hai lựa chọn:\n\n```mermaid\nflowchart LR\n    subgraph V[\"Vertical ↑\"]\n        S1[\"🖥️ 2 cores\\n4GB RAM\"] -->|\"Upgrade\"| S2[\"🖥️ 8 cores\\n32GB RAM\"]\n    end\n    subgraph H[\"Horizontal →\"]\n        S3[\"🖥️\"]\n        S4[\"🖥️\"]\n        S5[\"🖥️\"]\n    end\n```\n\n| | Vertical ↑ | Horizontal → |\n|--|-----------|-------------|\n| **Cách làm** | Nâng cấp 1 server | Thêm nhiều servers |\n| **Giới hạn** | Có (max RAM/CPU) | Gần như không |\n| **Downtime** | Cần restart | Zero downtime |\n| **Fault tolerance** | ❌ 1 chết = tất cả chết | ✅ 1 chết = còn lại chạy |"
     },
     {
       "id": 14,
@@ -161,7 +161,7 @@
       "type": "article",
       "title": "Phase 4 → 5: Vấn đề Local State",
       "emoji": "🤔",
-      "content": "### Hệ thống hoạt động tốt... cho đến khi:\n\n```\n1. 👤 User A upload avatar.png → Server 1\n2. 🖥️ Server 1 lưu file vào /uploads/avatar.png\n3. 👤 User A refresh page\n4. ⚖️ LB route đến Server 2\n5. 🖥️ Server 2: \"File not found!\" ❌\n```\n\n### Tại sao?\n\n> File chỉ tồn tại trên **local disk của Server 1**!\n\n### Các loại \"local state\" gây vấn đề:\n\n| Local State | Vấn đề |\n|-------------|--------|\n| 📁 Files trên disk | Không share được giữa servers |\n| 🍪 Sessions trong memory | Mất khi đổi server |\n| 💾 Cache trong RAM | Mỗi server có cache khác nhau |"
+      "content": "### Hệ thống hoạt động tốt... cho đến khi:\n\n```mermaid\nsequenceDiagram\n    participant U as 👤 User A\n    participant LB as ⚖️ LB\n    participant S1 as 🖥️ Server 1\n    participant S2 as 🖥️ Server 2\n    \n    U->>LB: Upload avatar.png\n    LB->>S1: Route to Server 1\n    S1->>S1: Save to /uploads/\n    S1-->>U: ✅ Upload success!\n    \n    Note over U: Refresh page...\n    \n    U->>LB: GET /avatar.png\n    LB->>S2: Route to Server 2\n    S2-->>U: ❌ File not found!\n```\n\n### Tại sao?\n\n> File chỉ tồn tại trên **local disk của Server 1**!\n\n### Các loại \"local state\" gây vấn đề:\n\n| Local State | Vấn đề |\n|-------------|--------|\n| 📁 Files trên disk | Không share được giữa servers |\n| 🍪 Sessions trong memory | Mất khi đổi server |\n| 💾 Cache trong RAM | Mỗi server có cache khác nhau |"
     },
     {
       "id": 19,
@@ -191,7 +191,7 @@
       "type": "article",
       "title": "Phase 5 → 6: Database bottleneck",
       "emoji": "🔥",
-      "content": "### Vấn đề mới: Database overload!\n\n```\n👥 Users → ⚖️ LB → 🖥️ 3 Servers → 🗄️ Database\n```\n\n| Metric | Giá trị |\n|--------|--------|\n| API requests/sec | 10,000 |\n| DB queries/sec | 50,000 (N+1 queries!) |\n| DB response time | 50ms → 500ms 📈 |\n\n### Phân tích:\n\n```\n❌ Homepage load 10 products\n   → 1 query products + 10 queries categories\n   → 11 queries × 10,000 requests\n   → 110,000 queries/sec!\n```\n\n> *Nếu data ít thay đổi, có cần query DB mỗi lần không?*"
+      "content": "### Vấn đề mới: Database overload!\n\n```mermaid\nflowchart LR\n    U[\"👥 10K req/s\"] --> LB[\"⚖️ LB\"]\n    LB --> S1[\"🖥️\"]\n    LB --> S2[\"🖥️\"]\n    LB --> S3[\"🖥️\"]\n    S1 & S2 & S3 -->|\"50K queries/s\"| DB[(\"🗄️ DB\\n🔥 Overload!\")]\n    \n    style DB fill:#fee2e2,stroke:#dc2626\n```\n\n| Metric | Giá trị |\n|--------|--------|\n| API requests/sec | 10,000 |\n| DB queries/sec | 50,000 (N+1 queries!) |\n| DB response time | 50ms → 500ms 📈 |\n\n### Phân tích:\n\n```\n❌ Homepage load 10 products\n   → 1 query products + 10 queries categories\n   → 11 queries × 10,000 requests\n   → 110,000 queries/sec!\n```\n\n> *Nếu data ít thay đổi, có cần query DB mỗi lần không?*"
     },
     {
       "id": 22,
@@ -272,7 +272,7 @@
       "type": "article",
       "title": "Phase 8: Replication Lag",
       "emoji": "⏱️",
-      "content": "### Vấn đề: Replication không instant!\n\n```\n1. User update name = \"John\" → Leader\n2. Leader replicate → Followers (mất 50-100ms)\n3. User refresh ngay lập tức → Read từ Follower\n4. Follower chưa có data mới → Hiện tên cũ! 😱\n```\n\n### Giải pháp:\n\n| Approach | Mô tả | Trade-off |\n|----------|-------|----------|\n| **Read-your-writes** | Sau write, read từ Leader | Tăng load Leader |\n| **Sticky session** | User luôn đọc từ 1 replica | Khó load balance |\n| **Causal consistency** | Track dependencies | Complex |\n\n### Khi nào chấp nhận lag?\n\n- ✅ Social feed (vài giây OK)\n- ✅ Product listings\n- ❌ Banking transactions\n- ❌ Inventory counts"
+      "content": "### Vấn đề: Replication không instant!\n\n```mermaid\nsequenceDiagram\n    participant U as 👤 User\n    participant L as 👑 Leader\n    participant F as 📖 Follower\n    \n    U->>L: UPDATE name = \"John\"\n    L-->>U: ✅ Success!\n    L->>F: Replicate... (50-100ms)\n    Note over U: Refresh ngay!\n    U->>F: SELECT name\n    F-->>U: name = \"Mike\" 😱\n    Note over F: Chưa có data mới!\n```\n\n### Giải pháp:\n\n| Approach | Mô tả | Trade-off |\n|----------|-------|----------|\n| **Read-your-writes** | Sau write, read từ Leader | Tăng load Leader |\n| **Sticky session** | User luôn đọc từ 1 replica | Khó load balance |\n| **Causal consistency** | Track dependencies | Complex |\n\n### Khi nào chấp nhận lag?\n\n- ✅ Social feed (vài giây OK)\n- ✅ Product listings\n- ❌ Banking transactions\n- ❌ Inventory counts"
     },
     {
       "id": 32,
@@ -458,7 +458,7 @@
       "type": "article",
       "title": "Phase 9: Gateway vs BFF",
       "emoji": "⚖️",
-      "content": "### Khi nào dùng gì?\n\n| | API Gateway | BFF |\n|--|-------------|-----|\n| **Focus** | Cross-cutting concerns | Client-specific logic |\n| **Số lượng** | 1 (hoặc ít) | 1 per client type |\n| **Logic** | Routing, auth, rate limit | Aggregation, transformation |\n| **Team own** | Platform/DevOps | Frontend teams |\n\n### Có thể kết hợp cả hai!\n\n```\n📱 Mobile → 🚪 Gateway → 📱 Mobile BFF → Services\n💻 Web    → 🚪 Gateway → 💻 Web BFF    → Services\n```\n\n### Kết hợp:\n- **Gateway**: Auth, rate limiting, SSL termination\n- **BFF**: Data aggregation, response shaping"
+      "content": "### Khi nào dùng gì?\n\n| | API Gateway | BFF |\n|--|-------------|-----|\n| **Focus** | Cross-cutting concerns | Client-specific logic |\n| **Số lượng** | 1 (hoặc ít) | 1 per client type |\n| **Logic** | Routing, auth, rate limit | Aggregation, transformation |\n| **Team own** | Platform/DevOps | Frontend teams |\n\n### Có thể kết hợp cả hai!\n\n```mermaid\nflowchart LR\n    M[\"📱 Mobile\"] --> GW[\"🚪 Gateway\"]\n    W[\"💻 Web\"] --> GW\n    GW --> BFF1[\"📱 Mobile BFF\"]\n    GW --> BFF2[\"💻 Web BFF\"]\n    BFF1 & BFF2 --> S1[\"User\"]\n    BFF1 & BFF2 --> S2[\"Product\"]\n    BFF1 & BFF2 --> S3[\"Order\"]\n    \n    style GW fill:#8b5cf6,stroke:#6d28d9,color:#fff\n```\n\n### Kết hợp:\n- **Gateway**: Auth, rate limiting, SSL termination\n- **BFF**: Data aggregation, response shaping"
     },
     {
       "id": 52,
@@ -472,7 +472,7 @@
       "type": "article",
       "title": "Phase 9: Cảnh báo!",
       "emoji": "🚨",
-      "content": "### ⚠️ Microservices tăng complexity 10x!\n\n> *\"You're not Netflix. I'm not Netflix.\"*\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người |\n| ❌ Startup đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps | K8s phức tạp |\n| ❌ Monolith chưa vấn đề | Đừng fix cái không hỏng! |"
+      "content": "### ⚠️ Microservices tăng complexity 10x!\n\n```mermaid\nflowchart LR\n    subgraph M[\"🏢 Monolith\"]\n        M1[\"1 Repo\"]\n        M2[\"1 Deploy\"]\n        M3[\"1 DB\"]\n    end\n    subgraph MS[\"🧩 Microservices\"]\n        MS1[\"N Repos\"]\n        MS2[\"N Deploys\"]\n        MS3[\"N DBs\"]\n        MS4[\"Service Mesh\"]\n        MS5[\"Distributed Tracing\"]\n    end\n    \n    style M fill:#bbf7d0,stroke:#22c55e\n    style MS fill:#fee2e2,stroke:#dc2626\n```\n\n> *\"You're not Netflix. I'm not Netflix.\"*\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người |\n| ❌ Startup đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps | K8s phức tạp |\n| ❌ Monolith chưa vấn đề | Đừng fix cái không hỏng! |"
     },
     {
       "id": 54,
