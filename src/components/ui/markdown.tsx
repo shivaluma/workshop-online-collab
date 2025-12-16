@@ -146,7 +146,7 @@ export function Markdown({
           p: ({ children }) => (
             <p
               className={cn(
-                "text-sm md:text-base text-muted-foreground leading-relaxed mb-3 md:mb-4",
+                "text-sm md:text-base text-foreground/85 leading-relaxed mb-3 md:mb-4",
                 compact && "mb-2 text-sm",
               )}
             >
@@ -175,7 +175,7 @@ export function Markdown({
             </ol>
           ),
           li: ({ children }) => (
-            <li className="flex items-start gap-2 md:gap-3 text-sm md:text-base text-muted-foreground">
+            <li className="flex items-start gap-2 md:gap-3 text-sm md:text-base text-foreground/85">
               <span className="text-primary mt-1 shrink-0">—</span>
               <span>{children}</span>
             </li>
@@ -193,7 +193,7 @@ export function Markdown({
 
             if (isInline) {
               return (
-                <code className="px-1.5 py-0.5 rounded bg-[#eff1f5] text-[#4c4f69] font-mono text-xs md:text-sm border border-[#ccd0da]">
+                <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs md:text-sm border border-border">
                   {children}
                 </code>
               );
@@ -228,7 +228,7 @@ export function Markdown({
           },
           // Blockquote - Editorial accent
           blockquote: ({ children }) => (
-            <blockquote className="border-l-3 md:border-l-4 border-primary pl-4 md:pl-5 text-sm md:text-base text-muted-foreground my-3 md:my-4 italic">
+            <blockquote className="border-l-3 md:border-l-4 border-primary pl-4 md:pl-5 text-sm md:text-base text-foreground/80 my-3 md:my-4 italic bg-primary/5 py-2 pr-4 rounded-r-lg">
               {children}
             </blockquote>
           ),
@@ -264,12 +264,12 @@ export function Markdown({
             <thead className="bg-muted">{children}</thead>
           ),
           th: ({ children }) => (
-            <th className="border border-border px-3 md:px-4 py-2 text-left font-semibold text-muted-foreground uppercase text-xs tracking-wide whitespace-nowrap">
+            <th className="border border-border px-3 md:px-4 py-2 text-left font-semibold text-foreground/90 uppercase text-xs tracking-wide whitespace-nowrap bg-muted/50">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-border px-3 md:px-4 py-2 text-muted-foreground">
+            <td className="border border-border px-3 md:px-4 py-2 text-foreground/85">
               {children}
             </td>
           ),

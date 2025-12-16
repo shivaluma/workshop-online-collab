@@ -21,20 +21,20 @@ export function ArticleSlide({ slide }: ArticleSlideProps) {
         </div>
       </div>
 
-      {/* Markdown content - Clean prose styling */}
+      {/* Markdown content - Clean prose styling with better contrast */}
       <div className="animate-fade-up delay-100 prose prose-lg max-w-none
         prose-headings:font-display prose-headings:text-foreground
-        prose-p:text-muted-foreground prose-p:leading-relaxed
+        prose-p:text-foreground/85 prose-p:leading-relaxed
         prose-strong:text-foreground prose-strong:font-semibold
         prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-        prose-code:bg-cream prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-foreground prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
-        prose-pre:bg-cream prose-pre:border prose-pre:border-border
-        prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-blockquote:not-italic
-        prose-li:text-muted-foreground
+        prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-foreground prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
+        prose-pre:bg-muted prose-pre:border prose-pre:border-border
+        prose-blockquote:border-l-primary prose-blockquote:text-foreground/80 prose-blockquote:not-italic
+        prose-li:text-foreground/85
         prose-img:rounded-lg prose-img:border prose-img:border-border
         prose-table:text-sm
-        prose-th:text-muted-foreground prose-th:font-medium prose-th:uppercase prose-th:tracking-wide prose-th:text-xs
-        prose-td:text-muted-foreground
+        prose-th:text-foreground/90 prose-th:font-semibold prose-th:uppercase prose-th:tracking-wide prose-th:text-xs
+        prose-td:text-foreground/85
       ">
         <Markdown>{slide.content}</Markdown>
       </div>

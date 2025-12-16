@@ -55,9 +55,9 @@ export function ContentSlide({ slide }: ContentSlideProps) {
                   >
                     <span className={cn(
                       "mt-1.5 shrink-0",
-                      idx === 0 ? "text-primary" : "text-muted-foreground"
+                      idx === 0 ? "text-primary" : "text-foreground/60"
                     )}>—</span>
-                    <span className="text-muted-foreground">
+                    <span className="text-foreground/85">
                       <Markdown compact>{point}</Markdown>
                     </span>
                   </li>
@@ -79,13 +79,13 @@ export function ContentSlide({ slide }: ContentSlideProps) {
             >
               <span className="text-primary mt-1 shrink-0">—</span>
               {typeof point === "string" ? (
-                <div className="flex-1 text-muted-foreground">
+                <div className="flex-1 text-foreground/85">
                   <Markdown compact>{point}</Markdown>
                 </div>
               ) : (
                 <div>
                   <span className="font-semibold text-foreground">{point.term}:</span>{" "}
-                  <span className="text-muted-foreground">{point.description}</span>
+                  <span className="text-foreground/85">{point.description}</span>
                 </div>
               )}
             </li>
@@ -96,7 +96,7 @@ export function ContentSlide({ slide }: ContentSlideProps) {
       {/* Code block - Editorial styling */}
       {slide.code && (
         <div className="animate-fade-up delay-300">
-          <pre className="bg-cream border border-border rounded-lg p-6 overflow-x-auto">
+          <pre className="bg-muted border border-border rounded-lg p-6 overflow-x-auto">
             <code className="text-sm md:text-base font-mono text-foreground whitespace-pre">
               {slide.code}
             </code>
@@ -113,7 +113,7 @@ export function ContentSlide({ slide }: ContentSlideProps) {
 
       {/* Note - Subtle sidebar */}
       {slide.note && (
-        <div className="text-muted-foreground text-base border-l-2 border-border pl-4 animate-fade-in delay-400">
+        <div className="text-foreground/80 text-base border-l-2 border-primary/50 pl-4 animate-fade-in delay-400 bg-primary/5 py-2 pr-4 rounded-r-lg">
           <Markdown compact>{`💡 ${slide.note}`}</Markdown>
         </div>
       )}

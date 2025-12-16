@@ -67,11 +67,12 @@
   /* Core palette */
   --ink: #1a1a1a;
   --paper: #faf9f7;
-  --cream: #f5f3ef;
+  --cream: #f0ede8;
   --terracotta: #c45a3b;
   --terracotta-muted: #e8d5cf;
-  --slate: #64748b;
-  --sage: #6b7c6b;
+  --slate: #475569;
+  --slate-light: #64748b;
+  --sage: #5a6b5a;
 
   /* Semantic colors */
   --background: var(--paper);
@@ -97,8 +98,8 @@
 
   --destructive: #b91c1c;
 
-  --border: #e5e2dc;
-  --input: #e5e2dc;
+  --border: #d8d4cc;
+  --input: #d8d4cc;
   --ring: var(--terracotta);
 
   /* Chart colors - warm editorial palette */
@@ -123,36 +124,36 @@
    DARK THEME - Refined dark for presentations
    ══════════════════════════════════════════════════════════════ */
 .dark {
-  --ink: #faf9f7;
-  --paper: #141414;
-  --cream: #1f1f1f;
+  --ink: #f5f5f5;
+  --paper: #121212;
+  --cream: #1e1e1e;
 
   --background: var(--paper);
   --foreground: var(--ink);
 
-  --card: #1a1a1a;
+  --card: #181818;
   --card-foreground: var(--ink);
 
-  --popover: #1a1a1a;
+  --popover: #181818;
   --popover-foreground: var(--ink);
 
-  --primary: #d4785c;
+  --primary: #e07a5a;
   --primary-foreground: #0f0f0f;
 
   --secondary: var(--cream);
   --secondary-foreground: var(--ink);
 
-  --muted: #2a2a2a;
-  --muted-foreground: #a1a1a1;
+  --muted: #262626;
+  --muted-foreground: #c4c4c4;
 
   --accent: #2d2522;
   --accent-foreground: var(--ink);
 
   --destructive: #ef4444;
 
-  --border: #2a2a2a;
-  --input: #2a2a2a;
-  --ring: #d4785c;
+  --border: #333333;
+  --input: #333333;
+  --ring: #e07a5a;
 
   --chart-1: #d4785c;
   --chart-2: #8fb48f;
@@ -468,7 +469,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 pre {
-  background: var(--cream);
+  background: var(--muted);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
@@ -491,20 +492,21 @@ pre::-webkit-scrollbar-thumb {
 }
 
 pre::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  background: var(--slate);
 }
 
 code {
   font-size: 0.875rem;
-  color: var(--ink);
+  color: var(--foreground);
 }
 
 /* Inline code */
 :not(pre) > code {
-  background: var(--cream);
+  background: var(--muted);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
+  border: 1px solid var(--border);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -563,12 +565,16 @@ th {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted-foreground);
+  color: var(--foreground);
+  opacity: 0.9;
+  background: var(--muted);
 }
 
 td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  opacity: 0.85;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -578,9 +584,19 @@ td {
 blockquote {
   border-left: 3px solid var(--terracotta);
   padding-left: 1.5rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   margin: 1.5rem 0;
   font-style: italic;
-  color: var(--muted-foreground);
+  color: var(--foreground);
+  opacity: 0.85;
+  background: rgba(196, 90, 59, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.dark blockquote {
+  background: rgba(224, 122, 90, 0.08);
 }
 
 blockquote p {
