@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckCircle2, GripVertical, XCircle, Zap } from "lucide-react";
+import { CheckCircle2, Clock, GripVertical, XCircle, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import type { OrderingQuizSlide as OrderingQuizSlideType } from "@/lib/slides/types";
@@ -37,13 +37,6 @@ interface OrderingQuizSlideProps {
   answerCount?: { count: number; total: number };
   quizResult?: { correctOrder: number[]; stats: QuizStats } | null;
 }
-
-const itemColors = [
-  "from-rose-500 to-pink-600",
-  "from-blue-500 to-cyan-600",
-  "from-amber-500 to-orange-600",
-  "from-emerald-500 to-teal-600",
-];
 
 // Fisher-Yates shuffle with seed based on quizId
 function shuffleArray<T>(array: T[], seed: string): T[] {
@@ -89,10 +82,10 @@ function SortableItem({ id, position, text, isDisabled }: SortableItemProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border-2 transition-colors",
+        "flex items-center gap-3 md:gap-4 p-4 rounded-lg border transition-all",
         isDragging
-          ? "border-violet-500 bg-violet-500/20 shadow-2xl shadow-violet-500/20 z-50"
-          : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600",
+          ? "border-primary bg-accent shadow-lg z-50"
+          : "border-border bg-card hover:border-primary/50",
         isDisabled
           ? "opacity-60 cursor-default"
           : "cursor-grab active:cursor-grabbing",
@@ -107,21 +100,23 @@ function SortableItem({ id, position, text, isDisabled }: SortableItemProps) {
           isDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing",
         )}
       >
-        <GripVertical className="w-5 h-5 md:w-6 md:h-6 text-zinc-500" />
+        <GripVertical className="w-5 h-5 text-muted-foreground" />
       </div>
 
       {/* Position number */}
       <div
         className={cn(
-          "w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br flex items-center justify-center text-white font-bold shrink-0",
-          itemColors[position % itemColors.length],
+          "w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center font-semibold shrink-0",
+          isDragging
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground"
         )}
       >
         {position + 1}
       </div>
 
       {/* Item text */}
-      <span className="flex-1 text-sm md:text-lg select-none">{text}</span>
+      <span className="flex-1 text-sm md:text-base text-foreground select-none">{text}</span>
     </div>
   );
 }
@@ -181,7 +176,7 @@ export function OrderingQuizSlide({
     return () => clearInterval(interval);
   }, [isQuizActive, quizStartTime, quizTimeout, isHost, hasAnswered]);
 
-  // Reset when quiz changes - we want to reset on new quiz
+  // Reset when quiz changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally reset on activeQuizId change
   useEffect(() => {
     setCurrentOrder(initialOrder);
@@ -224,26 +219,31 @@ export function OrderingQuizSlide({
   // Waiting for quiz to start
   if (!isQuizActive && !showResults) {
     return (
-      <div className="w-full max-w-4xl space-y-4 md:space-y-8 text-center px-2">
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          {slide.emoji && (
-            <span className="text-3xl md:text-5xl">{slide.emoji}</span>
-          )}
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold">
-            {slide.title}
-          </h2>
+      <div className="w-full max-w-3xl space-y-6 md:space-y-8 text-center px-4 animate-fade-up">
+        <div className="space-y-2">
+          <div className="flex items-center justify-center gap-3">
+            {slide.emoji && (
+              <span className="text-4xl md:text-5xl">{slide.emoji}</span>
+            )}
+            <h2 className="editorial-display text-3xl md:text-4xl lg:text-5xl text-foreground">
+              {slide.title}
+            </h2>
+          </div>
+          <div className="section-rule-accent w-16 mx-auto" />
         </div>
-        <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl md:rounded-2xl p-4 md:p-8">
-          <div className="text-lg md:text-2xl text-muted-foreground">
+
+        <div className="card-minimal p-6 md:p-10 space-y-4">
+          <div className="text-lg md:text-xl text-muted-foreground">
             {isHost
-              ? "Sẵn sàng bắt đầu quiz sắp xếp!"
-              : "Đang chờ host bắt đầu quiz..."}
+              ? "Ready to start the ordering quiz!"
+              : "Waiting for host to start..."}
           </div>
-          <div className="mt-3 md:mt-4 text-base md:text-lg text-violet-400">
-            ⏱️ {slide.timeLimit} giây để sắp xếp đúng thứ tự
+          <div className="flex items-center justify-center gap-2 text-primary">
+            <Clock className="w-5 h-5" />
+            <span className="font-medium">{slide.timeLimit} seconds to arrange</span>
           </div>
-          <div className="mt-2 text-xs md:text-sm text-muted-foreground">
-            🎯 Kéo thả để sắp xếp đúng thứ tự!
+          <div className="text-sm text-muted-foreground">
+            Drag and drop to arrange in correct order
           </div>
         </div>
       </div>
@@ -258,43 +258,44 @@ export function OrderingQuizSlide({
       JSON.stringify(userOrder) === JSON.stringify(correctOrder);
 
     return (
-      <div className="w-full max-w-4xl space-y-4 md:space-y-8 px-2 overflow-y-auto max-h-[calc(100vh-120px)]">
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          <span className="text-3xl md:text-5xl">
+      <div className="w-full max-w-3xl space-y-6 md:space-y-8 px-4 overflow-y-auto max-h-[calc(100vh-120px)] animate-fade-up">
+        <div className="text-center space-y-2">
+          <span className="text-4xl md:text-5xl">
             {isAllCorrect ? "🎉" : "😅"}
           </span>
-          <h2 className="text-2xl md:text-4xl font-bold">
+          <h2 className="editorial-display text-3xl md:text-4xl text-foreground">
             {isHost
-              ? "Kết quả Quiz"
+              ? "Quiz Results"
               : isAllCorrect
-                ? "Chính xác!"
-                : "Chưa đúng!"}
+                ? "Perfect!"
+                : "Not quite!"}
           </h2>
+          <div className="section-rule-accent w-12 mx-auto" />
         </div>
 
-        <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl md:rounded-2xl p-3 md:p-6 space-y-4 md:space-y-6">
-          <div className="text-base md:text-xl text-center text-muted-foreground">
+        <div className="card-minimal p-5 md:p-8 space-y-6">
+          <p className="text-base md:text-lg text-center text-muted-foreground">
             {slide.question}
-          </div>
+          </p>
 
           {/* Correct order */}
-          <div className="space-y-2">
-            <div className="text-sm text-emerald-400 font-medium">
-              ✅ Thứ tự đúng:
+          <div className="space-y-3">
+            <div className="text-sm text-primary font-medium">
+              Correct order:
             </div>
             <div className="space-y-2">
               {correctOrder.map((itemIndex, position) => (
                 <div
                   key={`correct-${itemIndex}`}
-                  className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3"
+                  className="flex items-center gap-3 bg-accent/50 border border-primary/20 rounded-lg p-3"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-semibold">
                     {position + 1}
                   </div>
-                  <span className="text-sm md:text-base">
+                  <span className="text-sm md:text-base text-foreground">
                     {slide.items[itemIndex]}
                   </span>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 ml-auto" />
+                  <CheckCircle2 className="w-5 h-5 text-primary ml-auto" />
                 </div>
               ))}
             </div>
@@ -302,9 +303,9 @@ export function OrderingQuizSlide({
 
           {/* User's order if different */}
           {!isAllCorrect && !isHost && (
-            <div className="space-y-2">
-              <div className="text-sm text-rose-400 font-medium">
-                ❌ Câu trả lời của bạn:
+            <div className="space-y-3">
+              <div className="text-sm text-destructive font-medium">
+                Your answer:
               </div>
               <div className="space-y-2">
                 {userOrder.map((itemIndex, position) => {
@@ -316,25 +317,27 @@ export function OrderingQuizSlide({
                       className={cn(
                         "flex items-center gap-3 rounded-lg p-3 border",
                         isCorrectPosition
-                          ? "bg-emerald-500/10 border-emerald-500/30"
-                          : "bg-rose-500/10 border-rose-500/30",
+                          ? "bg-accent/50 border-primary/20"
+                          : "bg-destructive/10 border-destructive/30",
                       )}
                     >
                       <div
                         className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold",
-                          isCorrectPosition ? "bg-emerald-500" : "bg-rose-500",
+                          "w-8 h-8 rounded-lg flex items-center justify-center font-semibold",
+                          isCorrectPosition 
+                            ? "bg-primary text-primary-foreground" 
+                            : "bg-destructive text-white",
                         )}
                       >
                         {position + 1}
                       </div>
-                      <span className="text-sm md:text-base">
+                      <span className="text-sm md:text-base text-foreground">
                         {slide.items[itemIndex]}
                       </span>
                       {isCorrectPosition ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 ml-auto" />
+                        <CheckCircle2 className="w-5 h-5 text-primary ml-auto" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-rose-400 ml-auto" />
+                        <XCircle className="w-5 h-5 text-destructive ml-auto" />
                       )}
                     </div>
                   );
@@ -344,31 +347,30 @@ export function OrderingQuizSlide({
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-2 md:gap-4 pt-3 md:pt-4 border-t border-zinc-700">
+          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border">
             <div className="text-center">
-              <div className="text-xl md:text-3xl font-bold text-violet-400">
+              <div className="text-2xl md:text-3xl font-semibold text-primary">
                 {stats.totalAnswers}
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">
-                Trả lời
+              <div className="text-sm text-muted-foreground">
+                Responses
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xl md:text-3xl font-bold text-emerald-400">
+              <div className="text-2xl md:text-3xl font-semibold text-primary">
                 {stats.totalAnswers > 0
                   ? Math.round((stats.correctCount / stats.totalAnswers) * 100)
-                  : 0}
-                %
+                  : 0}%
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">
-                Đúng hoàn toàn
+              <div className="text-sm text-muted-foreground">
+                Perfect score
               </div>
             </div>
           </div>
 
           {/* Explanation */}
           {slide.explanation && (
-            <div className="bg-violet-500/10 border border-violet-500/30 rounded-lg md:rounded-xl p-3 md:p-4 text-sm md:text-base text-violet-200">
+            <div className="bg-accent/50 border-l-4 border-primary rounded-r-lg p-4 text-sm md:text-base text-foreground">
               💡 {slide.explanation}
             </div>
           )}
@@ -381,7 +383,7 @@ export function OrderingQuizSlide({
   const sortableIds = currentOrder.map((idx) => `item-${idx}`);
 
   return (
-    <div className="w-full max-w-4xl space-y-4 md:space-y-6 px-2">
+    <div className="w-full max-w-3xl space-y-6 px-4">
       {/* Timer */}
       {!isHost && (
         <Timer
@@ -392,20 +394,20 @@ export function OrderingQuizSlide({
       )}
 
       {/* Question */}
-      <div className="text-center space-y-3">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">
+      <div className="text-center space-y-3 animate-fade-up">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground leading-tight">
           {slide.question}
         </h2>
-        <p className="text-sm md:text-base text-muted-foreground">
-          ✋ Kéo thả để sắp xếp đúng thứ tự
+        <p className="text-sm text-muted-foreground">
+          Drag to arrange in correct order
         </p>
         {isHost && answerCount && (
-          <div className="flex items-center justify-center gap-2 md:gap-4">
+          <div className="flex items-center justify-center gap-4">
             <Progress
               value={(answerCount.count / answerCount.total) * 100}
-              className="w-32 md:w-64 h-2 md:h-3"
+              className="w-32 md:w-48 h-2"
             />
-            <span className="text-sm md:text-lg text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {answerCount.count}/{answerCount.total}
             </span>
           </div>
@@ -422,7 +424,7 @@ export function OrderingQuizSlide({
           items={sortableIds}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-2 md:space-y-3">
+          <div className="space-y-2">
             {currentOrder.map((itemIndex, position) => (
               <SortableItem
                 key={`item-${itemIndex}`}
@@ -444,24 +446,23 @@ export function OrderingQuizSlide({
             onClick={handleSubmit}
             disabled={isSubmitting}
             className={cn(
-              "px-8 py-3 rounded-xl font-bold text-lg transition-all",
-              "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
+              "px-6 py-3 rounded-lg font-medium transition-all",
+              "bg-primary text-primary-foreground hover:bg-primary/90",
               "disabled:opacity-50 disabled:cursor-not-allowed",
-              "shadow-lg hover:shadow-violet-500/25",
             )}
           >
-            {isSubmitting ? "Đang gửi..." : "✓ Xác nhận thứ tự"}
+            {isSubmitting ? "Submitting..." : "Confirm Order"}
           </button>
         </div>
       )}
 
       {/* Answered confirmation */}
       {hasAnswered && !showResults && (
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-4 md:px-6 py-2 md:py-3">
-            <Zap className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" />
-            <span className="text-sm md:text-base text-emerald-300">
-              Đã gửi! Đang chờ kết quả...
+        <div className="text-center animate-fade-in">
+          <div className="inline-flex items-center gap-2 bg-accent border border-primary/30 rounded-full px-5 py-2.5">
+            <Zap className="w-4 h-4 text-primary" />
+            <span className="text-sm text-foreground">
+              Submitted! Waiting for results...
             </span>
           </div>
         </div>

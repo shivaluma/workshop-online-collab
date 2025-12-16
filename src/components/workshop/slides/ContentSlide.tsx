@@ -13,18 +13,21 @@ export function ContentSlide({ slide }: ContentSlideProps) {
   const hasMarkdownContent = !!slide.content;
 
   return (
-    <div className="w-full max-w-5xl space-y-8">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        {slide.emoji && <span className="text-5xl">{slide.emoji}</span>}
-        <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-          {slide.title}
-        </h2>
+    <div className="w-full max-w-5xl space-y-8 px-4">
+      {/* Header - Editorial serif heading */}
+      <div className="flex items-center gap-4 animate-fade-up">
+        {slide.emoji && <span className="text-4xl md:text-5xl">{slide.emoji}</span>}
+        <div className="space-y-2">
+          <h2 className="editorial-display text-3xl md:text-4xl lg:text-5xl text-foreground">
+            {slide.title}
+          </h2>
+          <div className="section-rule-accent w-12" />
+        </div>
       </div>
 
       {/* Markdown content */}
       {hasMarkdownContent && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="animate-fade-up delay-100 prose prose-lg max-w-none">
           <Markdown>{slide.content!}</Markdown>
         </div>
       )}
@@ -36,20 +39,27 @@ export function ContentSlide({ slide }: ContentSlideProps) {
             <div
               key={idx}
               className={cn(
-                "rounded-2xl p-6 space-y-4",
-                idx === 0 ? "bg-emerald-500/10 border border-emerald-500/30" : "bg-orange-500/10 border border-orange-500/30"
+                "rounded-lg p-6 space-y-4 border animate-fade-up",
+                idx === 0 
+                  ? "bg-accent/30 border-primary/20" 
+                  : "bg-muted/30 border-border"
               )}
+              style={{ animationDelay: `${(idx + 1) * 100}ms` }}
             >
-              <h3 className="text-2xl font-semibold">{column.title}</h3>
-              <ul className="space-y-2">
+              <h3 className="text-xl font-semibold text-foreground">{column.title}</h3>
+              <ul className="space-y-3">
                 {column.points.map((point, pIdx) => (
                   <li
                     key={pIdx}
-                    className="flex items-start gap-3 text-lg animate-in fade-in slide-in-from-bottom-2"
-                    style={{ animationDelay: `${pIdx * 100}ms` }}
+                    className="flex items-start gap-3 text-base"
                   >
-                    <span className={idx === 0 ? "text-emerald-400" : "text-orange-400"}>•</span>
-                    <Markdown compact>{point}</Markdown>
+                    <span className={cn(
+                      "mt-1.5 shrink-0",
+                      idx === 0 ? "text-primary" : "text-muted-foreground"
+                    )}>—</span>
+                    <span className="text-muted-foreground">
+                      <Markdown compact>{point}</Markdown>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -58,23 +68,23 @@ export function ContentSlide({ slide }: ContentSlideProps) {
         </div>
       )}
 
-      {/* Regular points */}
+      {/* Regular points - Editorial dash style */}
       {!hasColumns && !hasMarkdownContent && slide.points && (
         <ul className="space-y-4">
           {slide.points.map((point, idx) => (
             <li
               key={idx}
-              className="flex items-start gap-4 text-xl animate-in fade-in slide-in-from-left-4"
-              style={{ animationDelay: `${idx * 100}ms` }}
+              className="flex items-start gap-4 text-lg animate-fade-up"
+              style={{ animationDelay: `${(idx + 1) * 100}ms` }}
             >
-              <span className="text-violet-400 font-bold text-2xl mt-0.5">•</span>
+              <span className="text-primary mt-1 shrink-0">—</span>
               {typeof point === "string" ? (
-                <div className="flex-1">
+                <div className="flex-1 text-muted-foreground">
                   <Markdown compact>{point}</Markdown>
                 </div>
               ) : (
                 <div>
-                  <span className="font-semibold text-violet-300">{point.term}:</span>{" "}
+                  <span className="font-semibold text-foreground">{point.term}:</span>{" "}
                   <span className="text-muted-foreground">{point.description}</span>
                 </div>
               )}
@@ -83,27 +93,27 @@ export function ContentSlide({ slide }: ContentSlideProps) {
         </ul>
       )}
 
-      {/* Code block */}
+      {/* Code block - Editorial styling */}
       {slide.code && (
-        <div className="relative animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: "300ms" }}>
-          <pre className="bg-zinc-900 rounded-xl p-6 overflow-x-auto border border-zinc-700/50">
-            <code className="text-sm md:text-base font-mono text-emerald-300 whitespace-pre">
+        <div className="animate-fade-up delay-300">
+          <pre className="bg-cream border border-border rounded-lg p-6 overflow-x-auto">
+            <code className="text-sm md:text-base font-mono text-foreground whitespace-pre">
               {slide.code}
             </code>
           </pre>
         </div>
       )}
 
-      {/* Highlight */}
+      {/* Highlight - Warm accent */}
       {slide.highlight && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 animate-in fade-in">
+        <div className="bg-accent/50 border-l-4 border-primary rounded-r-lg p-4 animate-fade-in delay-400">
           <Markdown compact>{`⚠️ ${slide.highlight}`}</Markdown>
         </div>
       )}
 
-      {/* Note */}
+      {/* Note - Subtle sidebar */}
       {slide.note && (
-        <div className="text-muted-foreground text-lg border-l-4 border-violet-500/50 pl-4 animate-in fade-in">
+        <div className="text-muted-foreground text-base border-l-2 border-border pl-4 animate-fade-in delay-400">
           <Markdown compact>{`💡 ${slide.note}`}</Markdown>
         </div>
       )}

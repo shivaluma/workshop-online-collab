@@ -27,8 +27,8 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-28 md:bottom-36 right-4 z-40 bg-amber-600 hover:bg-amber-700 text-white rounded-full p-3 shadow-lg transition-all hover:scale-105"
-        title="Mở ghi chú"
+        className="fixed bottom-28 md:bottom-36 right-4 z-40 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 shadow-lg transition-all hover:scale-105"
+        title="Open notes"
       >
         <BookOpen className="w-5 h-5" />
       </button>
@@ -44,16 +44,16 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
           : "bottom-28 md:bottom-36 w-80 sm:w-96"
       )}
     >
-      <div className="bg-zinc-900/95 backdrop-blur-sm border border-amber-500/30 rounded-xl shadow-2xl shadow-amber-500/10 overflow-hidden">
+      <div className="bg-card/95 backdrop-blur-sm border border-primary/20 rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-500/20 cursor-pointer"
+          className="flex items-center justify-between px-4 py-2.5 bg-accent/50 border-b border-border cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-medium text-amber-300">
-              Ghi chú cho Host
+            <BookOpen className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              Host Notes
             </span>
           </div>
           <div className="flex items-center gap-1">
@@ -62,8 +62,8 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
                 e.stopPropagation();
                 setIsMinimized(true);
               }}
-              className="p-1 hover:bg-zinc-700 rounded transition-colors"
-              title="Thu nhỏ"
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="Minimize"
             >
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -85,7 +85,7 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
           <ScrollArea className={isExpanded ? "h-[40vh]" : "h-32"}>
             <div className="p-4 space-y-2">
               {slideTitle && (
-                <div className="text-xs text-muted-foreground mb-3 pb-2 border-b border-zinc-700">
+                <div className="text-xs text-muted-foreground mb-3 pb-2 border-b border-border">
                   📍 {slideTitle}
                 </div>
               )}
@@ -108,13 +108,13 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
                     className={cn(
                       "text-sm leading-relaxed",
                       isBullet && "flex items-start gap-2",
-                      isHighlight && "text-amber-300 font-medium",
-                      isQuestion && "text-violet-300 italic",
-                      !isBullet && !isHighlight && !isQuestion && "text-zinc-300"
+                      isHighlight && "text-primary font-medium",
+                      isQuestion && "text-muted-foreground italic",
+                      !isBullet && !isHighlight && !isQuestion && "text-foreground/80"
                     )}
                   >
                     {isBullet && (
-                      <span className="text-amber-500 mt-0.5 shrink-0">•</span>
+                      <span className="text-primary mt-0.5 shrink-0">•</span>
                     )}
                     <span>{content}</span>
                   </div>
@@ -126,9 +126,9 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
 
         {/* Expand hint */}
         {!isExpanded && noteLines.length > 3 && (
-          <div className="px-4 py-1.5 bg-zinc-800/50 border-t border-zinc-700/50">
+          <div className="px-4 py-1.5 bg-muted/50 border-t border-border">
             <span className="text-xs text-muted-foreground">
-              Click để xem thêm ({noteLines.length} dòng)
+              Click to expand ({noteLines.length} lines)
             </span>
           </div>
         )}
@@ -136,5 +136,3 @@ export function HostNotes({ notes, slideTitle }: HostNotesProps) {
     </div>
   );
 }
-
-

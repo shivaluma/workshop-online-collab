@@ -56,7 +56,7 @@ export default function HostPage({
   useEffect(() => {
     const secret = localStorage.getItem(`host_secret_${roomId}`);
     if (!secret) {
-      toast.error("Không tìm thấy thông tin host");
+      toast.error("Host credentials not found");
       router.push("/");
       return;
     }
@@ -73,7 +73,7 @@ export default function HostPage({
         const verifyData = await verifyRes.json();
 
         if (!verifyData.valid) {
-          toast.error("Thông tin host không hợp lệ");
+          toast.error("Invalid host credentials");
           router.push("/");
           return;
         }
@@ -111,7 +111,7 @@ export default function HostPage({
         initializeQuizzes(secret, slides);
       } catch (error) {
         console.error("Error loading room:", error);
-        toast.error("Không thể tải phòng");
+        toast.error("Could not load room");
         router.push("/");
       } finally {
         setIsVerifying(false);
@@ -187,7 +187,7 @@ export default function HostPage({
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomId);
     setCopied(true);
-    toast.success("Đã copy mã phòng!");
+    toast.success("Room code copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -210,7 +210,7 @@ export default function HostPage({
 
   const handleParticipantJoin = useCallback(
     (id: string, name: string, score: number, count: number) => {
-      toast.success(`${name} đã tham gia!`);
+      toast.success(`${name} joined!`);
       setParticipants((prev) => {
         const existing = prev.find((p) => p.id === id);
         if (existing) {
@@ -345,46 +345,46 @@ export default function HostPage({
 
   if (!slideDeckData || isVerifying) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-muted-foreground">Đang tải...</p>
+          <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-foreground">
-      <Toaster position="top-right" theme="dark" />
+    <div className="min-h-screen bg-background text-foreground">
+      <Toaster position="top-right" theme="light" />
 
-      {/* Room Code Banner */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-800">
-        <div className="max-w-7xl mx-auto px-2 md:px-4 py-1.5 md:py-2 flex items-center justify-between gap-2">
-          <div className="text-xs md:text-sm text-muted-foreground truncate">
+      {/* Room Code Banner - Minimal styling */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 py-2 flex items-center justify-between gap-3">
+          <div className="text-sm text-muted-foreground truncate">
             {slideDeckData.title}
           </div>
           <button
             onClick={copyRoomCode}
-            className="flex items-center gap-1 md:gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg px-2 md:px-3 py-1 md:py-1.5 transition-colors shrink-0"
+            className="flex items-center gap-2 bg-accent hover:bg-accent/80 border border-border rounded-lg px-3 py-1.5 transition-colors shrink-0"
           >
-            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">
-              Mã phòng:
+            <span className="text-sm text-muted-foreground hidden sm:inline">
+              Room:
             </span>
-            <span className="font-mono font-bold text-xs md:text-sm text-violet-400">
+            <span className="font-mono font-semibold text-sm text-primary">
               {roomId}
             </span>
             {copied ? (
-              <Check className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-primary" />
             ) : (
-              <Copy className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
+              <Copy className="w-4 h-4 text-muted-foreground" />
             )}
           </button>
         </div>
       </div>
 
       {/* Main slide area */}
-      <div className="h-[calc(100vh-110px)] md:h-[calc(100vh-140px)] pt-10 md:pt-12 overflow-hidden">
+      <div className="h-[calc(100vh-110px)] md:h-[calc(100vh-140px)] pt-12 overflow-hidden">
         <SlideDeck
           slides={slideDeckData.slides}
           currentSlide={currentSlide}

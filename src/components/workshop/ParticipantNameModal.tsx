@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,11 +37,10 @@ export function ParticipantNameModal({
 
   return (
     <Dialog open={open}>
-      <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
+      <DialogContent className="sm:max-w-md bg-card border-border">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl">
-              <Sparkles className="w-6 h-6 text-violet-400" />
+            <DialogTitle className="flex items-center gap-2 text-2xl editorial-display">
               Join Workshop
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -57,24 +56,24 @@ export function ParticipantNameModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
-                className="pl-10 h-12 text-lg bg-zinc-800 border-zinc-700 focus:border-violet-500"
+                className="pl-10 h-12 text-lg"
                 maxLength={30}
                 autoFocus
                 disabled={isLoading}
               />
             </div>
-            {error && <p className="mt-2 text-sm text-rose-400">{error}</p>}
+            {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
           </div>
 
           <DialogFooter>
             <Button
               type="submit"
               disabled={!name.trim() || isLoading}
-              className="w-full h-12 text-lg bg-violet-600 hover:bg-violet-700"
+              className="w-full h-12 text-lg"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   Joining...
                 </span>
               ) : (

@@ -22,24 +22,24 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
     <div className="w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-2 md:mb-3">
         {/* Timer */}
-        <div className="flex items-center gap-1 md:gap-2">
+        <div className="flex items-center gap-2">
           <Clock
             className={cn(
               "w-4 h-4 md:w-5 md:h-5 transition-colors",
               isCritical
-                ? "text-rose-500 animate-pulse"
+                ? "text-destructive animate-pulse"
                 : isLow
-                  ? "text-amber-500"
-                  : "text-violet-400",
+                  ? "text-primary"
+                  : "text-muted-foreground",
             )}
           />
           <span
             className={cn(
-              "text-xl md:text-2xl font-mono font-bold tabular-nums transition-colors",
+              "text-xl md:text-2xl font-mono font-semibold tabular-nums transition-colors",
               isCritical
-                ? "text-rose-500"
+                ? "text-destructive"
                 : isLow
-                  ? "text-amber-500"
+                  ? "text-primary"
                   : "text-foreground",
             )}
           >
@@ -49,50 +49,50 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
 
         {/* Current Score */}
         {showScore && isActive && (
-          <div className="flex items-center gap-1 md:gap-2">
+          <div className="flex items-center gap-2">
             <Zap
               className={cn(
                 "w-4 h-4 md:w-5 md:h-5 transition-colors",
                 currentScore > 700
-                  ? "text-emerald-400"
+                  ? "text-primary"
                   : currentScore > 400
-                    ? "text-amber-400"
-                    : "text-rose-400",
+                    ? "text-muted-foreground"
+                    : "text-destructive",
               )}
             />
             <span
               className={cn(
-                "text-xl md:text-2xl font-mono font-bold tabular-nums transition-all",
+                "text-xl md:text-2xl font-mono font-semibold tabular-nums transition-all",
                 currentScore > 700
-                  ? "text-emerald-400"
+                  ? "text-primary"
                   : currentScore > 400
-                    ? "text-amber-400"
-                    : "text-rose-400",
+                    ? "text-muted-foreground"
+                    : "text-destructive",
               )}
             >
               +{currentScore}
             </span>
-            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">điểm</span>
+            <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">pts</span>
           </div>
         )}
       </div>
       
-      {/* Progress bar */}
-      <div className="relative h-2 md:h-3 bg-zinc-800 rounded-full overflow-hidden">
+      {/* Progress bar - Minimal styling */}
+      <div className="relative h-1.5 md:h-2 bg-muted rounded-full overflow-hidden">
         <div
           className={cn(
             "absolute inset-y-0 left-0 rounded-full transition-all duration-100",
             isCritical
-              ? "bg-gradient-to-r from-rose-500 to-rose-600"
+              ? "bg-destructive"
               : isLow
-                ? "bg-gradient-to-r from-amber-500 to-orange-500"
-                : "bg-gradient-to-r from-violet-500 to-fuchsia-500",
+                ? "bg-primary"
+                : "bg-primary/60",
           )}
           style={{ width: `${percentage}%` }}
         />
         {isActive && (
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-white/20 animate-pulse"
+            className="absolute inset-y-0 left-0 rounded-full bg-white/20 animate-pulse-subtle"
             style={{ width: `${percentage}%` }}
           />
         )}
@@ -100,8 +100,8 @@ export function Timer({ timeRemaining, totalTime, isActive, showScore = true }: 
       
       {/* Score hint */}
       {showScore && isActive && (
-        <p className="text-center text-[10px] md:text-xs text-muted-foreground mt-1.5 md:mt-2">
-          Trả lời nhanh = nhiều điểm hơn!
+        <p className="text-center text-xs text-muted-foreground mt-2">
+          Answer quickly for more points!
         </p>
       )}
     </div>

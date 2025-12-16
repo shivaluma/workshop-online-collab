@@ -61,7 +61,7 @@ export default function ParticipantPage({
         // Fetch room data to get slides config
         const res = await fetch(`/api/rooms/${roomId}`);
         if (!res.ok) {
-          toast.error("Không tìm thấy phòng");
+          toast.error("Room not found");
           router.push("/");
           return;
         }
@@ -96,7 +96,7 @@ export default function ParticipantPage({
         }
       } catch (error) {
         console.error("Error loading room:", error);
-        toast.error("Không tìm thấy phòng");
+        toast.error("Room not found");
         router.push("/");
       } finally {
         setIsLoading(false);
@@ -133,10 +133,10 @@ export default function ParticipantPage({
       setParticipantName(participant.name);
       setShowNameModal(false);
 
-      toast.success("Chào mừng bạn!");
+      toast.success("Welcome!");
     } catch (error) {
       setJoinError(
-        error instanceof Error ? error.message : "Không thể vào phòng",
+        error instanceof Error ? error.message : "Could not join room",
       );
     } finally {
       setIsJoining(false);
@@ -248,18 +248,18 @@ export default function ParticipantPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-muted-foreground">Đang tải...</p>
+          <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-foreground">
-      <Toaster position="top-center" theme="dark" />
+    <div className="min-h-screen bg-background text-foreground">
+      <Toaster position="top-center" theme="light" />
 
       {/* Name modal */}
       <ParticipantNameModal
@@ -269,36 +269,36 @@ export default function ParticipantPage({
         error={joinError}
       />
 
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-800">
-        <div className="max-w-7xl mx-auto px-2 md:px-4 py-2 md:py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-3 min-w-0">
-            <span className="text-sm md:text-lg font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent shrink-0">
+      {/* Header - Minimal styling */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-base md:text-lg font-semibold text-foreground shrink-0">
               Workshop
             </span>
             {participantName && (
-              <span className="text-xs md:text-base text-muted-foreground truncate">
+              <span className="text-sm text-muted-foreground truncate">
                 • {participantName}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4 shrink-0">
+          <div className="flex items-center gap-3 md:gap-4 shrink-0">
             {/* Connection status */}
-            <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex items-center gap-1.5">
               {isConnected ? (
-                <Wifi className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" />
+                <Wifi className="w-4 h-4 text-primary" />
               ) : (
-                <WifiOff className="w-3 h-3 md:w-4 md:h-4 text-rose-400 animate-pulse" />
+                <WifiOff className="w-4 h-4 text-destructive animate-pulse" />
               )}
               <span
                 className={cn(
-                  "text-[10px] md:text-xs hidden sm:inline",
-                  isConnected ? "text-emerald-400" : "text-rose-400",
+                  "text-xs hidden sm:inline",
+                  isConnected ? "text-primary" : "text-destructive",
                 )}
               >
                 {isReconnecting
-                  ? "Đang kết nối..."
+                  ? "Connecting..."
                   : isConnected
                     ? "Live"
                     : "Offline"}
@@ -309,13 +309,13 @@ export default function ParticipantPage({
             {myScore && (
               <button
                 onClick={() => setShowScoresSidebar(!showScoresSidebar)}
-                className="flex items-center gap-1 md:gap-2 bg-violet-500/20 border border-violet-500/30 rounded-full px-2 md:px-4 py-1 md:py-1.5 hover:bg-violet-500/30 transition-colors"
+                className="flex items-center gap-2 bg-accent border border-border rounded-full px-3 py-1.5 hover:bg-accent/80 transition-colors"
               >
-                <Trophy className="w-3 h-3 md:w-4 md:h-4 text-violet-400" />
-                <span className="font-mono font-bold text-sm md:text-base">
+                <Trophy className="w-4 h-4 text-primary" />
+                <span className="font-mono font-semibold text-sm">
                   {myScore.score}
                 </span>
-                <span className="text-[10px] md:text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   #{myScore.rank}
                 </span>
               </button>
@@ -325,7 +325,7 @@ export default function ParticipantPage({
       </header>
 
       {/* Main content */}
-      <main className="pt-12 md:pt-16 min-h-screen">
+      <main className="pt-14 min-h-screen">
         <SlideDeck
           slides={slideDeckData.slides}
           currentSlide={currentSlide}
@@ -349,14 +349,14 @@ export default function ParticipantPage({
       {showScoresSidebar && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-foreground/20 z-40"
             onClick={() => setShowScoresSidebar(false)}
           />
-          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 max-w-sm bg-zinc-900 border-l border-zinc-800 z-50 p-3 md:p-4 overflow-y-auto animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between mb-3 md:mb-4">
-              <h3 className="text-base md:text-lg font-semibold flex items-center gap-2">
-                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
-                Bảng xếp hạng
+          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-80 max-w-sm bg-card border-l border-border z-50 p-4 overflow-y-auto animate-slide-right">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-primary" />
+                Leaderboard
               </h3>
               <button
                 onClick={() => setShowScoresSidebar(false)}

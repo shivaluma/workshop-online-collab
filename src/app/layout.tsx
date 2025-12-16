@@ -1,20 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, Libre_Franklin, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const libreFranklin = Libre_Franklin({
+  variable: "--font-libre-franklin",
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "DB Workshop - Database Mental Model for FE Devs",
-  description: "Interactive workshop platform for teaching database concepts to frontend developers",
+  title: "Workshop — Interactive Learning Platform",
+  description: "Premium interactive workshop platform for developers. Learn system design, databases, and more.",
 };
 
 export default function RootLayout({
@@ -23,9 +34,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950`}
+        className={`${cormorant.variable} ${libreFranklin.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
       </body>

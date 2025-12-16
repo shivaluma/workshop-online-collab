@@ -48,7 +48,6 @@ export function LeaderboardSlide({
       if (rest.length > 0) {
         setPhase("list-reveal");
         
-        // Reveal from last to first (bottom to top effect)
         for (let i = rest.length; i >= 1; i--) {
           setRevealedListItems(rest.length - i + 1);
           await delay(400);
@@ -71,13 +70,13 @@ export function LeaderboardSlide({
         await delay(2000);
       }
 
-      // Phase 5: Podium reveal - 1st place (dramatic!)
+      // Phase 5: Podium reveal - 1st place
       if (scores.length >= 1) {
         setPhase("podium-1");
         await delay(2500);
       }
 
-      // Phase 6: Complete with confetti
+      // Phase 6: Complete
       setPhase("complete");
     };
 
@@ -96,19 +95,22 @@ export function LeaderboardSlide({
   // Waiting state
   if (phase === "waiting") {
     return (
-      <div className="w-full max-w-4xl space-y-4 md:space-y-8 text-center px-2">
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          {slide.emoji && (
-            <span className="text-4xl md:text-6xl animate-bounce-slow">{slide.emoji}</span>
-          )}
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-foreground">
-            {slide.title}
-          </h2>
+      <div className="w-full max-w-3xl space-y-6 md:space-y-8 text-center px-4 animate-fade-up">
+        <div className="space-y-2">
+          <div className="flex items-center justify-center gap-3">
+            {slide.emoji && (
+              <span className="text-4xl md:text-5xl animate-float">{slide.emoji}</span>
+            )}
+            <h2 className="editorial-display text-3xl md:text-4xl lg:text-5xl text-foreground">
+              {slide.title}
+            </h2>
+          </div>
+          <div className="section-rule-accent w-16 mx-auto" />
         </div>
-        <p className="text-base md:text-xl text-muted-foreground">
-          {slide.description || "Chờ host reveal kết quả..."}
+        <p className="text-lg text-muted-foreground">
+          {slide.description || "Waiting for results..."}
         </p>
-        <div className="text-5xl md:text-8xl animate-pulse">🎮</div>
+        <div className="text-5xl md:text-6xl animate-pulse-subtle">🎮</div>
       </div>
     );
   }
@@ -116,15 +118,15 @@ export function LeaderboardSlide({
   // Drumroll state
   if (phase === "drumroll") {
     return (
-      <div className="w-full max-w-4xl text-center space-y-4 md:space-y-8 px-2">
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          <Sparkles className="w-6 h-6 md:w-12 md:h-12 text-amber-400 animate-spin-slow" />
-          <h2 className="text-2xl sm:text-3xl md:text-6xl font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent animate-pulse">
-            Và người chiến thắng là...
+      <div className="w-full max-w-3xl text-center space-y-6 md:space-y-8 px-4">
+        <div className="flex items-center justify-center gap-3">
+          <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-primary animate-pulse" />
+          <h2 className="editorial-display text-3xl md:text-5xl text-foreground">
+            And the winner is...
           </h2>
-          <Sparkles className="w-6 h-6 md:w-12 md:h-12 text-amber-400 animate-spin-slow" />
+          <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-primary animate-pulse" />
         </div>
-        <div className="flex justify-center gap-4 md:gap-6 text-4xl md:text-7xl">
+        <div className="flex justify-center gap-4 md:gap-6 text-4xl md:text-6xl">
           <span className="animate-bounce" style={{ animationDelay: "0ms" }}>
             🥁
           </span>
@@ -135,8 +137,8 @@ export function LeaderboardSlide({
             🥁
           </span>
         </div>
-        <div className="text-lg md:text-2xl text-muted-foreground animate-pulse">
-          {scores.length} người chơi tham gia
+        <div className="text-lg text-muted-foreground">
+          {scores.length} participants
         </div>
       </div>
     );
@@ -148,24 +150,24 @@ export function LeaderboardSlide({
   const showList = phase === "list-reveal" || phase === "list-complete" || showPodium;
 
   return (
-    <div className="w-full max-w-5xl space-y-4 md:space-y-6 px-2 overflow-y-auto max-h-[calc(100vh-100px)]">
+    <div className="w-full max-w-4xl space-y-4 md:space-y-6 px-4 overflow-y-auto max-h-[calc(100vh-100px)]">
       {/* Header */}
       <div className="text-center">
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          <Crown className="w-6 h-6 md:w-10 md:h-10 text-amber-400 animate-bounce-slow" />
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+        <div className="flex items-center justify-center gap-3">
+          <Crown className="w-6 h-6 md:w-8 md:h-8 text-primary animate-float" />
+          <h2 className="editorial-display text-3xl md:text-4xl text-foreground">
             {slide.title}
           </h2>
-          <Crown className="w-6 h-6 md:w-10 md:h-10 text-amber-400 animate-bounce-slow" />
+          <Crown className="w-6 h-6 md:w-8 md:h-8 text-primary animate-float" />
         </div>
+        <div className="section-rule-accent w-16 mx-auto mt-2" />
       </div>
 
-      {/* List (4th place and below) - Revealed first from bottom to top */}
+      {/* List (4th place and below) */}
       {showList && rest.length > 0 && (
-        <div className="space-y-1.5 md:space-y-2 px-1 md:px-4 mb-4 md:mb-8">
+        <div className="space-y-2 px-2 md:px-4 mb-6">
           {rest.map((score, idx) => {
             const rank = idx + 4;
-            // Reverse the reveal - last items show first
             const itemIndex = rest.length - idx;
             const isRevealed = revealedListItems >= itemIndex || phase !== "list-reveal";
 
@@ -173,25 +175,26 @@ export function LeaderboardSlide({
               <div
                 key={score.id}
                 className={cn(
-                  "flex items-center gap-2 md:gap-4 p-2 md:p-3 rounded-lg md:rounded-xl border transition-all",
-                  "bg-zinc-800/80 border-zinc-600",
+                  "flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-lg border transition-all",
+                  "bg-card border-border",
                   isRevealed
                     ? "opacity-100 translate-y-0 scale-100"
                     : "opacity-0 translate-y-8 scale-95",
                 )}
                 style={{
                   transitionDuration: "600ms",
-                  transitionDelay: isRevealed ? "0ms" : "0ms",
                 }}
               >
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg text-sm md:text-base shrink-0">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center font-semibold text-muted-foreground shrink-0">
                   {rank}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm md:text-lg truncate">{score.name}</div>
+                  <div className="font-medium text-sm md:text-base truncate text-foreground">
+                    {score.name}
+                  </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="font-mono text-base md:text-xl font-bold text-violet-400">
+                  <div className="font-mono text-base md:text-lg font-semibold text-primary">
                     {score.score.toLocaleString()}
                   </div>
                 </div>
@@ -203,7 +206,7 @@ export function LeaderboardSlide({
 
       {/* Podium Area */}
       {showPodium && (
-        <div className="flex items-end justify-center gap-1 sm:gap-3 md:gap-6 h-56 sm:h-72 md:h-96 pt-2 md:pt-4">
+        <div className="flex items-end justify-center gap-2 sm:gap-4 md:gap-6 h-56 sm:h-72 md:h-80 pt-4">
           {/* 2nd Place */}
           <div
             className={cn(
@@ -214,23 +217,19 @@ export function LeaderboardSlide({
             )}
             style={{ transitionDuration: "800ms", transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
           >
-            <div className="bg-gradient-to-b from-slate-400/30 to-slate-500/10 border-2 border-slate-400/50 rounded-t-xl md:rounded-t-2xl p-2 md:p-4 text-center w-20 sm:w-28 md:w-36 backdrop-blur-sm relative overflow-hidden">
-              {/* Shine effect */}
-              {(phase === "podium-2" || phase === "podium-1" || phase === "complete") && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine" />
-              )}
-              <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-18 md:h-18 mx-auto rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center mb-1 md:mb-2 ring-2 md:ring-4 ring-slate-400/50 shadow-xl">
-                <span className="text-xl sm:text-3xl md:text-4xl">🥈</span>
+            <div className="bg-card border border-border rounded-t-lg p-3 md:p-4 text-center w-20 sm:w-28 md:w-36 relative overflow-hidden">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-2 ring-2 ring-border">
+                <span className="text-xl sm:text-2xl md:text-3xl">🥈</span>
               </div>
-              <div className="font-bold truncate text-xs sm:text-sm md:text-base text-white">
+              <div className="font-semibold truncate text-xs sm:text-sm md:text-base text-foreground">
                 {top3[1]?.name || "---"}
               </div>
-              <div className="text-sm sm:text-xl md:text-2xl font-mono font-bold text-slate-300">
+              <div className="text-sm sm:text-lg md:text-xl font-mono font-semibold text-muted-foreground">
                 {top3[1]?.score?.toLocaleString() || 0}
               </div>
             </div>
-            <div className="w-20 sm:w-28 md:w-36 h-20 sm:h-32 md:h-40 bg-gradient-to-b from-slate-400 to-slate-600 rounded-b-lg flex items-center justify-center shadow-xl shadow-slate-500/40">
-              <span className="text-4xl sm:text-6xl md:text-7xl font-bold text-white/90">
+            <div className="w-20 sm:w-28 md:w-36 h-20 sm:h-28 md:h-32 bg-muted rounded-b-lg flex items-center justify-center">
+              <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-muted-foreground/50">
                 2
               </span>
             </div>
@@ -247,37 +246,31 @@ export function LeaderboardSlide({
             style={{ transitionDuration: "1000ms", transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
           >
             <div className="relative">
-              {/* Glowing crown */}
-              <div className="absolute -top-6 md:-top-10 left-1/2 -translate-x-1/2 z-10">
+              <div className="absolute -top-6 md:-top-8 left-1/2 -translate-x-1/2 z-10">
                 <Crown
                   className={cn(
-                    "w-8 h-8 md:w-12 md:h-12 text-amber-400 transition-all duration-500 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]",
-                    phase === "complete" ? "animate-bounce-slow" : "animate-pulse",
+                    "w-6 h-6 md:w-10 md:h-10 text-primary transition-all duration-500",
+                    phase === "complete" ? "animate-float" : "animate-pulse-subtle",
                   )}
                 />
               </div>
-              {/* Glow effect behind card */}
               {(phase === "podium-1" || phase === "complete") && (
-                <div className="absolute -inset-2 md:-inset-4 bg-amber-400/20 blur-xl md:blur-2xl rounded-full animate-pulse" />
+                <div className="absolute -inset-3 md:-inset-4 bg-primary/10 blur-xl rounded-full animate-pulse-subtle" />
               )}
-              <div className="relative bg-gradient-to-b from-amber-400/40 to-yellow-500/20 border-2 border-amber-400/60 rounded-t-xl md:rounded-t-2xl p-2 sm:p-4 md:p-5 text-center w-24 sm:w-32 md:w-44 backdrop-blur-sm mt-3 md:mt-4 overflow-hidden">
-                {/* Shine effect */}
-                {(phase === "podium-1" || phase === "complete") && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-shine" />
-                )}
-                <div className="w-12 h-12 sm:w-18 sm:h-18 md:w-24 md:h-24 mx-auto rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center mb-1 md:mb-2 ring-2 md:ring-4 ring-amber-400/60 shadow-2xl shadow-amber-500/50">
-                  <span className="text-2xl sm:text-4xl md:text-5xl">🏆</span>
+              <div className="relative bg-accent border-2 border-primary/30 rounded-t-lg p-3 sm:p-4 md:p-5 text-center w-24 sm:w-32 md:w-44 mt-3 overflow-hidden">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-2 ring-2 ring-primary/30">
+                  <span className="text-2xl sm:text-3xl md:text-4xl">🏆</span>
                 </div>
-                <div className="font-bold truncate text-sm sm:text-lg md:text-xl text-white">
+                <div className="font-semibold truncate text-sm sm:text-lg md:text-xl text-foreground">
                   {top3[0]?.name || "---"}
                 </div>
-                <div className="text-lg sm:text-2xl md:text-3xl font-mono font-bold text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+                <div className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-primary">
                   {top3[0]?.score?.toLocaleString() || 0}
                 </div>
               </div>
             </div>
-            <div className="w-24 sm:w-32 md:w-44 h-24 sm:h-40 md:h-52 bg-gradient-to-b from-amber-400 to-yellow-600 rounded-b-lg flex items-center justify-center shadow-2xl shadow-amber-500/50">
-              <span className="text-5xl sm:text-7xl md:text-8xl font-bold text-white/90 drop-shadow-lg">
+            <div className="w-24 sm:w-32 md:w-44 h-24 sm:h-36 md:h-44 bg-primary/20 rounded-b-lg flex items-center justify-center">
+              <span className="text-5xl sm:text-6xl md:text-7xl font-bold text-primary/30">
                 1
               </span>
             </div>
@@ -293,23 +286,19 @@ export function LeaderboardSlide({
             )}
             style={{ transitionDuration: "800ms", transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
           >
-            <div className="bg-gradient-to-b from-orange-600/30 to-amber-700/10 border-2 border-orange-600/50 rounded-t-xl md:rounded-t-2xl p-2 md:p-4 text-center w-20 sm:w-28 md:w-36 backdrop-blur-sm relative overflow-hidden">
-              {/* Shine effect */}
-              {(phase === "podium-3" || phase === "podium-2" || phase === "podium-1" || phase === "complete") && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine" />
-              )}
-              <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-18 md:h-18 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center mb-1 md:mb-2 ring-2 md:ring-4 ring-orange-500/50 shadow-xl">
-                <span className="text-xl sm:text-3xl md:text-4xl">🥉</span>
+            <div className="bg-card border border-border rounded-t-lg p-3 md:p-4 text-center w-20 sm:w-28 md:w-36 relative overflow-hidden">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-2 ring-2 ring-border">
+                <span className="text-xl sm:text-2xl md:text-3xl">🥉</span>
               </div>
-              <div className="font-bold truncate text-xs sm:text-sm md:text-base text-white">
+              <div className="font-semibold truncate text-xs sm:text-sm md:text-base text-foreground">
                 {top3[2]?.name || "---"}
               </div>
-              <div className="text-sm sm:text-xl md:text-2xl font-mono font-bold text-orange-400">
+              <div className="text-sm sm:text-lg md:text-xl font-mono font-semibold text-muted-foreground">
                 {top3[2]?.score?.toLocaleString() || 0}
               </div>
             </div>
-            <div className="w-20 sm:w-28 md:w-36 h-16 sm:h-24 md:h-28 bg-gradient-to-b from-orange-500 to-amber-700 rounded-b-lg flex items-center justify-center shadow-xl shadow-orange-500/40">
-              <span className="text-4xl sm:text-6xl md:text-7xl font-bold text-white/90">
+            <div className="w-20 sm:w-28 md:w-36 h-16 sm:h-20 md:h-24 bg-muted rounded-b-lg flex items-center justify-center">
+              <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-muted-foreground/50">
                 3
               </span>
             </div>
@@ -320,12 +309,12 @@ export function LeaderboardSlide({
       {/* Confetti */}
       {phase === "complete" && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
-          {Array.from({ length: 80 }).map((_, i) => {
-            const emoji = ["🎉", "⭐", "🏆", "🎊", "✨", "💫", "🌟", "🎯", "💎"][i % 9];
+          {Array.from({ length: 60 }).map((_, i) => {
+            const emoji = ["🎉", "⭐", "🏆", "🎊", "✨", "💫"][i % 6];
             const left = Math.random() * 100;
             const animDelay = Math.random() * 2;
             const duration = 4 + Math.random() * 3;
-            const size = 1 + Math.random() * 1.5;
+            const size = 1 + Math.random() * 1;
 
             return (
               <div
@@ -347,17 +336,17 @@ export function LeaderboardSlide({
 
       {/* Winner announcement */}
       {phase === "complete" && top3[0] && (
-        <div className="text-center animate-in fade-in zoom-in duration-1000 px-2">
-          <div className="inline-flex items-center gap-2 md:gap-3 bg-gradient-to-r from-amber-500/20 via-yellow-500/30 to-amber-500/20 border-2 border-amber-500/50 rounded-full px-4 md:px-8 py-2 md:py-4 shadow-xl shadow-amber-500/20">
-            <Trophy className="w-5 h-5 md:w-8 md:h-8 text-amber-400 animate-bounce-slow shrink-0" />
-            <span className="text-base md:text-2xl font-bold">
-              🎊 Chúc mừng{" "}
-              <span className="text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+        <div className="text-center animate-fade-in px-4">
+          <div className="inline-flex items-center gap-2 md:gap-3 bg-accent border border-primary/30 rounded-full px-5 md:px-8 py-2.5 md:py-4">
+            <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary shrink-0" />
+            <span className="text-base md:text-xl font-medium">
+              Congratulations{" "}
+              <span className="text-primary font-semibold">
                 {top3[0].name}
               </span>
-              ! 🎊
+              !
             </span>
-            <Trophy className="w-5 h-5 md:w-8 md:h-8 text-amber-400 animate-bounce-slow shrink-0" />
+            <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary shrink-0" />
           </div>
         </div>
       )}
@@ -369,3 +358,5 @@ export function LeaderboardSlide({
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// Add confetti keyframe to globals.css if not present

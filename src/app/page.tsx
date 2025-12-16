@@ -7,7 +7,6 @@ import {
   FileJson,
   Presentation,
   Server,
-  Sparkles,
   Upload,
   Users,
   X,
@@ -16,21 +15,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPresetList } from "@/lib/slides";
 
 // Icon mapping for presets
 const PRESET_ICONS: Record<string, React.ReactNode> = {
-  "db-workshop": <Database className="w-5 h-5 text-emerald-400" />,
-  "system-design-101": <Server className="w-5 h-5 text-blue-400" />,
+  "db-workshop": <Database className="w-5 h-5 text-primary" />,
+  "system-design-101": <Server className="w-5 h-5 text-primary" />,
 };
 
 // Wrapper with Suspense for useSearchParams
@@ -38,8 +29,8 @@ export default function HomePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       }
     >
@@ -79,6 +70,8 @@ function HomePageContent() {
     quizCount: number;
   } | null>(null);
 
+  // View mode
+  const [activeView, setActiveView] = useState<"join" | "host">("join");
 
   // Check URL param for host mode
   useEffect(() => {
@@ -93,7 +86,7 @@ function HomePageContent() {
     setLogoClickCount(newCount);
     if (newCount >= 5 && !hostUnlocked) {
       setHostUnlocked(true);
-      toast.success("🎉 Host mode unlocked!");
+      toast.success("Host mode unlocked");
     }
   };
 
@@ -108,7 +101,7 @@ function HomePageContent() {
     if (!file) return;
 
     if (!file.name.endsWith(".json")) {
-      toast.error("Chỉ chấp nhận file JSON");
+      toast.error("Only JSON files accepted");
       return;
     }
 
@@ -117,9 +110,8 @@ function HomePageContent() {
       try {
         const data = JSON.parse(event.target?.result as string);
 
-        // Validate structure
         if (!data.slides || !Array.isArray(data.slides)) {
-          toast.error("File JSON không hợp lệ: thiếu 'slides' array");
+          toast.error("Invalid JSON: missing 'slides' array");
           return;
         }
 
@@ -133,9 +125,9 @@ function HomePageContent() {
           quizCount,
         });
         setSelectedPreset(null);
-        toast.success(`Đã load ${slideCount} slides, ${quizCount} quizzes`);
+        toast.success(`Loaded ${slideCount} slides, ${quizCount} quizzes`);
       } catch {
-        toast.error("File JSON không hợp lệ");
+        toast.error("Invalid JSON file");
       }
     };
     reader.readAsText(file);
@@ -144,13 +136,12 @@ function HomePageContent() {
   // Create room
   const handleCreateRoom = async () => {
     if (!selectedPreset && !uploadedFile) {
-      toast.error("Vui lòng chọn bài giảng hoặc upload file");
+      toast.error("Please select a workshop or upload a file");
       return;
     }
 
     setIsCreating(true);
     try {
-      // Send slidePreset or customSlides to server
       const body: { slidePreset?: string; customSlides?: unknown } = {};
       if (selectedPreset) {
         body.slidePreset = selectedPreset;
@@ -166,14 +157,12 @@ function HomePageContent() {
       if (!res.ok) throw new Error("Failed to create room");
 
       const room = await res.json();
-
-      // Store host secret locally
       localStorage.setItem(`host_secret_${room.id}`, room.hostSecret);
 
-      toast.success("Đã tạo phòng!");
+      toast.success("Room created!");
       router.push(`/host/${room.id}`);
     } catch {
-      toast.error("Không thể tạo phòng");
+      toast.error("Could not create room");
     } finally {
       setIsCreating(false);
     }
@@ -191,7 +180,7 @@ function HomePageContent() {
 
       router.push(`/room/${joinCode.trim()}`);
     } catch {
-      toast.error("Không tìm thấy phòng");
+      toast.error("Room not found");
     } finally {
       setIsJoining(false);
     }
@@ -205,234 +194,353 @@ function HomePageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <Toaster position="top-center" theme="dark" />
+    <div className="min-h-screen bg-background">
+      <Toaster position="top-center" theme="light" />
 
-      <div className="w-full max-w-md">
-        {/* Logo - click 5 times to unlock host mode */}
-        <div className="text-center mb-8">
+      {/* Editorial Hero Section */}
+      <div className="min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="px-6 md:px-12 py-6 flex items-center justify-between">
           <button
             type="button"
             onClick={handleLogoClick}
-            className="inline-flex items-center gap-2 text-2xl font-bold cursor-default select-none"
+            className="cursor-default select-none"
           >
-            <Sparkles className="w-7 h-7 text-violet-400" />
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-              Workshop
+            <span className="editorial-subhead text-muted-foreground tracking-widest">
+              Interactive Learning
             </span>
           </button>
-          <p className="text-sm text-muted-foreground mt-1">
-            Interactive Quiz Platform
-          </p>
-        </div>
 
-        {/* Main Tabs */}
-        <Tabs defaultValue="join" className="w-full">
-          {hostUnlocked ? (
-            <TabsList className="grid w-full grid-cols-2 h-12 bg-zinc-900">
-              <TabsTrigger
-                value="join"
-                className="data-[state=active]:bg-violet-600"
+          {hostUnlocked && (
+            <nav className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveView("join")}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeView === "join"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <Users className="w-4 h-4 mr-2" />
-                Tham gia
-              </TabsTrigger>
-              <TabsTrigger
-                value="host"
-                className="data-[state=active]:bg-violet-600"
+                Join
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView("host")}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeView === "host"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <Presentation className="w-4 h-4 mr-2" />
-                Tạo phòng
-              </TabsTrigger>
-            </TabsList>
-          ) : (
-            <div className="h-12 bg-zinc-900 rounded-lg flex items-center justify-center">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-300">
-                <Users className="w-4 h-4" />
-                Tham gia Workshop
+                Host
+              </button>
+            </nav>
+          )}
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex items-center">
+          <div className="w-full px-6 md:px-12 lg:px-24 py-12">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center max-w-7xl mx-auto">
+              {/* Left: Editorial Typography */}
+              <div className="space-y-8 animate-fade-up">
+                <div className="space-y-4">
+                  <h1 className="editorial-display text-6xl md:text-7xl lg:text-8xl text-foreground">
+                    Workshop
+                  </h1>
+                  <div className="section-rule-accent" />
+                </div>
+
+                <p className="text-lg md:text-xl text-muted-foreground max-w-md leading-relaxed">
+                  Premium interactive learning experiences for developers.
+                  Real-time quizzes, live leaderboards, and engaging content.
+                </p>
+
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Live Sessions
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Interactive Quizzes
+                  </span>
+                </div>
+              </div>
+
+              {/* Right: Join/Host Card */}
+              <div className="animate-fade-up delay-200">
+                {activeView === "join" || !hostUnlocked ? (
+                  <JoinCard
+                    joinCode={joinCode}
+                    setJoinCode={setJoinCode}
+                    isJoining={isJoining}
+                    onSubmit={handleJoinRoom}
+                  />
+                ) : (
+                  <HostCard
+                    presets={presets}
+                    selectedPreset={selectedPreset}
+                    setSelectedPreset={setSelectedPreset}
+                    uploadedFile={uploadedFile}
+                    fileInputRef={fileInputRef}
+                    handleFileUpload={handleFileUpload}
+                    clearUpload={clearUpload}
+                    isCreating={isCreating}
+                    onCreateRoom={handleCreateRoom}
+                  />
+                )}
               </div>
             </div>
-          )}
+          </div>
+        </main>
 
-          {/* Join Tab */}
-          <TabsContent value="join" className="mt-4">
-            <Card className="bg-zinc-900/50 border-zinc-800">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Tham gia Workshop</CardTitle>
-                <CardDescription>Nhập mã phòng từ host</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleJoinRoom} className="space-y-4">
-                  <Input
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value)}
-                    placeholder="Mã phòng"
-                    className="h-12 text-center text-lg tracking-widest uppercase bg-zinc-800 border-zinc-700"
-                    disabled={isJoining}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!joinCode.trim() || isJoining}
-                    className="w-full h-12 bg-violet-600 hover:bg-violet-700"
-                  >
-                    {isJoining ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Đang vào...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        Vào phòng
-                        <ArrowRight className="w-4 h-4" />
-                      </span>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Host Tab - only shown when unlocked */}
-          {hostUnlocked && (
-            <TabsContent value="host" className="mt-4">
-              <Card className="bg-zinc-900/50 border-zinc-800">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg">Tạo Workshop</CardTitle>
-                  <CardDescription>
-                    Chọn bài giảng có sẵn hoặc upload file JSON
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Presets */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Bài giảng có sẵn
-                    </label>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {presets.map((preset) => (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPreset(preset.id);
-                            setUploadedFile(null);
-                          }}
-                          className={`w-full p-3 rounded-lg border text-left transition-all relative ${
-                            selectedPreset === preset.id
-                              ? "border-violet-500 bg-violet-500/10"
-                              : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="shrink-0">
-                              {PRESET_ICONS[preset.id] || (
-                                <Sparkles className="w-5 h-5 text-violet-400" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">
-                                {preset.title}
-                              </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {preset.author}
-                              </div>
-                            </div>
-                            <div className="text-right text-xs text-muted-foreground shrink-0">
-                              <div>{preset.slideCount} slides</div>
-                              <div>{preset.quizCount} quizzes</div>
-                            </div>
-                            {selectedPreset === preset.id && (
-                              <Check className="w-5 h-5 text-violet-400 shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-zinc-700" />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-zinc-900 px-2 text-muted-foreground">
-                        hoặc
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Upload */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Upload JSON
-                    </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".json"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-
-                    {uploadedFile ? (
-                      <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10">
-                        <FileJson className="w-8 h-8 text-emerald-400" />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">
-                            {uploadedFile.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {uploadedFile.slideCount} slides,{" "}
-                            {uploadedFile.quizCount} quizzes
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={clearUpload}
-                          className="p-1 hover:bg-zinc-700 rounded"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full p-4 rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-600 transition-colors"
-                      >
-                        <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                        <div className="text-sm text-muted-foreground">
-                          Click để upload file .json
-                        </div>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Create Button */}
-                  <Button
-                    onClick={handleCreateRoom}
-                    disabled={(!selectedPreset && !uploadedFile) || isCreating}
-                    className="w-full h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700"
-                  >
-                    {isCreating ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Đang tạo...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Tạo phòng Workshop
-                      </span>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-        </Tabs>
+        {/* Footer */}
+        <footer className="px-6 md:px-12 py-6 border-t border-border">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>© 2025</span>
+            <span className="editorial-subhead tracking-widest">Built for developers</span>
+          </div>
+        </footer>
       </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// JOIN CARD COMPONENT
+// ══════════════════════════════════════════════════════════════
+
+interface JoinCardProps {
+  joinCode: string;
+  setJoinCode: (code: string) => void;
+  isJoining: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+function JoinCard({ joinCode, setJoinCode, isJoining, onSubmit }: JoinCardProps) {
+  return (
+    <div className="card-minimal p-8 md:p-10 space-y-8">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <Users className="w-5 h-5 text-primary" />
+          <h2 className="text-2xl font-semibold">Join Workshop</h2>
+        </div>
+        <p className="text-muted-foreground">
+          Enter the room code provided by your host
+        </p>
+      </div>
+
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label className="editorial-subhead text-muted-foreground">
+            Room Code
+          </label>
+          <Input
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            placeholder="ABC123"
+            className="h-14 text-center text-2xl tracking-[0.3em] uppercase font-mono bg-cream border-border focus:border-primary"
+            disabled={isJoining}
+            maxLength={10}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={!joinCode.trim() || isJoining}
+          className="w-full h-12 text-base"
+        >
+          {isJoining ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              Joining...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              Enter Room
+              <ArrowRight className="w-4 h-4" />
+            </span>
+          )}
+        </Button>
+      </form>
+
+      <div className="pt-4 border-t border-border">
+        <p className="text-sm text-muted-foreground text-center">
+          Don&apos;t have a code? Ask your workshop host.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// HOST CARD COMPONENT
+// ══════════════════════════════════════════════════════════════
+
+interface HostCardProps {
+  presets: {
+    id: string;
+    title: string;
+    author: string;
+    slideCount: number;
+    quizCount: number;
+  }[];
+  selectedPreset: string | null;
+  setSelectedPreset: (id: string | null) => void;
+  uploadedFile: {
+    name: string;
+    data: unknown;
+    slideCount: number;
+    quizCount: number;
+  } | null;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  clearUpload: () => void;
+  isCreating: boolean;
+  onCreateRoom: () => void;
+}
+
+function HostCard({
+  presets,
+  selectedPreset,
+  setSelectedPreset,
+  uploadedFile,
+  fileInputRef,
+  handleFileUpload,
+  clearUpload,
+  isCreating,
+  onCreateRoom,
+}: HostCardProps) {
+  return (
+    <div className="card-minimal p-8 md:p-10 space-y-8">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <Presentation className="w-5 h-5 text-primary" />
+          <h2 className="text-2xl font-semibold">Create Workshop</h2>
+        </div>
+        <p className="text-muted-foreground">
+          Select a preset or upload your own content
+        </p>
+      </div>
+
+      {/* Presets */}
+      <div className="space-y-3">
+        <label className="editorial-subhead text-muted-foreground">
+          Available Workshops
+        </label>
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {presets.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => {
+                setSelectedPreset(preset.id);
+              }}
+              className={`w-full p-4 rounded-lg border text-left transition-all ${
+                selectedPreset === preset.id
+                  ? "border-primary bg-accent"
+                  : "border-border hover:border-primary/50 bg-background"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="shrink-0">
+                  {PRESET_ICONS[preset.id] || (
+                    <Database className="w-5 h-5 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{preset.title}</div>
+                  <div className="text-sm text-muted-foreground truncate">
+                    {preset.author}
+                  </div>
+                </div>
+                <div className="text-right text-xs text-muted-foreground shrink-0">
+                  <div>{preset.slideCount} slides</div>
+                  <div>{preset.quizCount} quizzes</div>
+                </div>
+                {selectedPreset === preset.id && (
+                  <Check className="w-5 h-5 text-primary shrink-0" />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-card px-3 text-sm text-muted-foreground">or</span>
+        </div>
+      </div>
+
+      {/* Upload */}
+      <div className="space-y-3">
+        <label className="editorial-subhead text-muted-foreground">
+          Custom Content
+        </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+
+        {uploadedFile ? (
+          <div className="flex items-center gap-3 p-4 rounded-lg border border-primary bg-accent">
+            <FileJson className="w-6 h-6 text-primary" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate">{uploadedFile.name}</div>
+              <div className="text-sm text-muted-foreground">
+                {uploadedFile.slideCount} slides, {uploadedFile.quizCount} quizzes
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={clearUpload}
+              className="p-1.5 hover:bg-background rounded transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full p-6 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors"
+          >
+            <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+            <div className="text-sm text-muted-foreground">
+              Upload JSON file
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* Create Button */}
+      <Button
+        onClick={onCreateRoom}
+        disabled={(!selectedPreset && !uploadedFile) || isCreating}
+        className="w-full h-12 text-base"
+      >
+        {isCreating ? (
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            Creating...
+          </span>
+        ) : (
+          <span className="flex items-center gap-2">
+            Create Room
+            <ArrowRight className="w-4 h-4" />
+          </span>
+        )}
+      </Button>
     </div>
   );
 }
