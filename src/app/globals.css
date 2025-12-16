@@ -274,6 +274,10 @@
   background: var(--cream);
 }
 
+.bg-cream {
+  background: var(--cream);
+}
+
 /* Gradient text */
 .gradient-text {
   background: linear-gradient(135deg, var(--terracotta) 0%, #d4785c 50%, #e5a088 100%);
