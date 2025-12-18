@@ -208,13 +208,6 @@
       "content": "### Redis vs Traditional Database\n\n```mermaid\nflowchart LR\n    subgraph DB[\"🗄️ PostgreSQL\"]\n        D1[\"Disk I/O\"]\n        D2[\"Query Parser\"]\n        D3[\"Query Optimizer\"]\n        D4[\"Index Lookup\"]\n    end\n    subgraph RD[\"⚡ Redis\"]\n        R1[\"RAM\"]\n        R2[\"Key-Value\"]\n    end\n    \n    style RD fill:#fee2e2,stroke:#dc2626\n```\n\n### Benchmark thực tế:\n\n| Metric | PostgreSQL | Redis | Chênh lệch |\n|--------|------------|-------|------------|\n| **Latency** | 1-10ms | 0.1-0.5ms | **~20x faster** |\n| **Throughput** | 10K-50K ops/s | **100K-500K ops/s** | **~10x more** |\n| **Storage** | Disk (SSD) | **RAM** | RAM nhanh ~100x |\n\n### Tại sao Redis nhanh?\n\n| Lý do | Giải thích |\n|-------|------------|\n| 💾 **In-memory** | Data trong RAM, không disk I/O |\n| 🔑 **Key-Value** | O(1) lookup, không cần query parsing |\n| 🧵 **Single-threaded** | Không lock contention, không context switch |\n| 📦 **Simple data structures** | Hash, List, Set - optimized cho speed |"
     },
     {
-      "id": "22c",
-      "type": "article",
-      "title": "Phase 6: Redis tại Scale",
-      "emoji": "📈",
-      "content": "### Redis Cluster - Scale horizontally\n\n```mermaid\nflowchart TB\n    App[\"🖥️ App\"] --> RC[\"Redis Cluster\"]\n    subgraph RC[\"Redis Cluster\"]\n        M1[\"Master 1\\nSlots 0-5460\"]\n        M2[\"Master 2\\nSlots 5461-10922\"]\n        M3[\"Master 3\\nSlots 10923-16383\"]\n        M1 --> R1[\"Replica\"]\n        M2 --> R2[\"Replica\"]\n        M3 --> R3[\"Replica\"]\n    end\n    \n    style M1 fill:#f59e0b,stroke:#d97706\n    style M2 fill:#f59e0b,stroke:#d97706\n    style M3 fill:#f59e0b,stroke:#d97706\n```\n\n### Ai dùng Redis?\n\n| Company | Scale | Use case |\n|---------|-------|----------|\n| **Twitter** | 10TB+ cache | Timeline, sessions |\n| **GitHub** | 1M+ ops/sec | Job queues, caching |\n| **Snapchat** | 100K+ ops/sec | Real-time features |\n| **Stack Overflow** | 50K ops/sec | Caching, rate limiting |\n\n### Redis không chỉ là cache!\n\n- 📬 **Message Queue** (Pub/Sub, Streams)\n- 🔢 **Rate Limiting** (INCR + EXPIRE)\n- 🏆 **Leaderboards** (Sorted Sets)\n- 🔐 **Session Store**\n- 📊 **Real-time Analytics**"
-    },
-    {
       "id": 23,
       "type": "article",
       "title": "Phase 6: Caching Patterns",
