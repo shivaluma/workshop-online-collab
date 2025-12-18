@@ -360,7 +360,7 @@
       "type": "article",
       "title": "Phase 8: Partitioning - Không phải lúc nào cũng cần Sharding!",
       "emoji": "📊",
-      "content": "### Khoan! Trước khi nhảy vào Sharding...\n\n> **Partitioning có thể đủ cho nhiều use cases!**\n\n```mermaid\nflowchart TB\n    subgraph DB[\"🗄️ 1 Database Instance\"]\n        P1[(\"📂 Partition 1\\n2023\")]\n        P2[(\"📂 Partition 2\\n2024\")]\n        P3[(\"📂 Partition 3\\n2025\")]\n    end\n    \n    API[\"🖥️ API\"] --> DB\n    \n    style DB fill:#3b82f6,stroke:#2563eb\n```\n\n### Partitioning = Chia table trong CÙng 1 database\n\n| Điểm | Mô tả |\n|------|-------|\n| 📍 **Vị trí** | Cùng 1 DB instance |\n| 🔀 **Routing** | DB engine tự động handle |\n| ⚡ **Query** | Partition pruning - chỉ scan phần cần |\n| 🗃️ **Use case** | Bảng lớn, archival data, time-series |\n\n### Ví dụ thực tế:\n\n```sql\n-- Bảng orders 500M rows, partition theo năm\nSELECT * FROM orders WHERE created_at >= '2024-01-01'\n-- Chỉ scan partition 2024, không scan 500M rows!\n```\n\n> **Partitioning giúp quản lý data lớn, nhưng KHÔNG scale-out!**"
+      "content": "### Khoan! Trước khi nhảy vào Sharding...\n\n> **Partitioning có thể đủ cho nhiều use cases!**\n\n```mermaid\nflowchart TB\n    subgraph DB[\"🗄️ 1 Database Instance\"]\n        P1[(\"📂 Partition 1\\n2023\")]\n        P2[(\"📂 Partition 2\\n2024\")]\n        P3[(\"📂 Partition 3\\n2025\")]\n    end\n    \n    API[\"🖥️ API\"] --> DB\n    \n    style DB fill:#3b82f6,stroke:#2563eb\n```\n\n### Partitioning = Chia table trong CÙNG 1 database\n\n| Điểm | Mô tả |\n|------|-------|\n| 📍 **Vị trí** | Cùng 1 DB instance |\n| 🔀 **Routing** | DB engine tự động handle |\n| ⚡ **Query** | Partition pruning - chỉ scan phần cần |\n| 🗃️ **Use case** | Bảng lớn, archival data, time-series |\n\n### Khi nên dùng Partitioning?\n\n| Điều kiện | Chi tiết |\n|-----------|----------|\n| ✅ **Data lớn nhưng DB chưa quá tải** | Hàng chục → trăm triệu rows, DB vẫn chịu được về CPU/RAM/IO |\n| ✅ **Query có pattern rõ ràng** | Theo thời gian (created_at), theo vùng (region_id), theo trạng thái (status) |\n| ✅ **Mục tiêu** | Query nhanh hơn, index nhỏ lại, dễ archive/delete data cũ |\n\n### Ví dụ thực tế:\n\n| Table | Partition by | Lý do |\n|-------|-------------|-------|\n| **logs** | Theo tháng | Dễ xóa logs cũ |\n| **orders** | Theo created_date | Query theo khoảng thời gian |\n| **events** | Theo region | Query theo vùng địa lý |\n\n```sql\n-- Bảng orders 500M rows, partition theo năm\nSELECT * FROM orders WHERE created_at >= '2024-01-01'\n-- Chỉ scan partition 2024, không scan 500M rows!\n```\n\n> **Partitioning giúp quản lý data lớn, nhưng KHÔNG scale-out!**"
     },
     {
       "id": 39,
@@ -440,76 +440,9 @@
     {
       "id": 47,
       "type": "article",
-      "title": "Phase 9: Microservices",
+      "title": "Phase 9: Microservices - Khi nào mới cần?",
       "emoji": "🧩",
-      "content": "### Microservices là gì?\n\nTách monolith thành **nhiều services nhỏ**:\n- 🗄️ Database riêng\n- 🚀 Deploy độc lập\n- 📈 Scale riêng\n- 👥 Team riêng\n\n```mermaid\nflowchart TB\n    GW[\"🚪 API Gateway\"] --> US[\"👤 User Service\"]\n    GW --> PS[\"📦 Product Service\"]\n    GW --> OS[\"🛒 Order Service\"]\n    GW --> PY[\"💳 Payment Service\"]\n    \n    US --> DB1[(\"DB\")]\n    PS --> DB2[(\"DB\")]\n    OS --> DB3[(\"DB\")]\n    PY --> DB4[(\"DB\")]\n```"
-    },
-    {
-      "id": 48,
-      "type": "article",
-      "title": "Phase 9: API Gateway",
-      "emoji": "🚪",
-      "content": "### API Gateway - Cửa ngõ duy nhất\n\n```mermaid\nflowchart TB\n    C1[\"📱 Mobile\"] --> GW\n    C2[\"💻 Web\"] --> GW\n    C3[\"🤖 Third-party\"] --> GW\n    GW[\"🚪 API Gateway\"] --> US[\"User\"]\n    GW --> PS[\"Product\"]\n    GW --> OS[\"Order\"]\n```\n\n### Gateway làm gì?\n\n| Chức năng | Mô tả |\n|-----------|-------|\n| 🔀 **Routing** | Route requests đến đúng service |\n| 🔒 **Authentication** | Verify JWT/API keys tập trung |\n| ⚡ **Rate limiting** | Chống abuse, DDoS |\n| 📊 **Logging/Metrics** | Centralized observability |\n| 🔄 **Protocol translation** | REST ↔ gRPC, WebSocket |\n\n### Tools: **Kong**, **AWS API Gateway**, **Nginx**, **Traefik**"
-    },
-    {
-      "id": 49,
-      "type": "article",
-      "title": "Phase 9: BFF Pattern",
-      "emoji": "🎨",
-      "content": "### Backend For Frontend - API riêng cho từng client\n\n```mermaid\nflowchart TB\n    M[\"📱 Mobile App\"] --> BFF1[\"📱 Mobile BFF\"]\n    W[\"💻 Web App\"] --> BFF2[\"💻 Web BFF\"]\n    BFF1 & BFF2 --> US[\"User Service\"]\n    BFF1 & BFF2 --> PS[\"Product Service\"]\n    BFF1 & BFF2 --> OS[\"Order Service\"]\n```\n\n### Tại sao cần BFF?\n\n| Client | Needs |\n|--------|-------|\n| 📱 **Mobile** | Ít data, tiết kiệm bandwidth |\n| 💻 **Web** | Nhiều data hơn, rich UI |\n| 📺 **TV App** | UI đơn giản, ít fields |\n\n### BFF giải quyết:\n- ✅ **Aggregate** data từ nhiều services\n- ✅ **Transform** response cho từng platform\n- ✅ **Optimize** payload size cho mobile\n- ✅ **Decouple** frontend khỏi backend services"
-    },
-    {
-      "id": 50,
-      "type": "article",
-      "title": "Phase 9: Gateway vs BFF",
-      "emoji": "⚖️",
-      "content": "### Khi nào dùng gì?\n\n| | API Gateway | BFF |\n|--|-------------|-----|\n| **Focus** | Cross-cutting concerns | Client-specific logic |\n| **Số lượng** | 1 (hoặc ít) | 1 per client type |\n| **Logic** | Routing, auth, rate limit | Aggregation, transformation |\n| **Team own** | Platform/DevOps | Frontend teams |\n\n### Có thể kết hợp cả hai!\n\n```mermaid\nflowchart LR\n    M[\"📱 Mobile\"] --> GW[\"🚪 Gateway\"]\n    W[\"💻 Web\"] --> GW\n    GW --> BFF1[\"📱 Mobile BFF\"]\n    GW --> BFF2[\"💻 Web BFF\"]\n    BFF1 & BFF2 --> S1[\"User\"]\n    BFF1 & BFF2 --> S2[\"Product\"]\n    BFF1 & BFF2 --> S3[\"Order\"]\n    \n    style GW fill:#8b5cf6,stroke:#6d28d9,color:#fff\n```\n\n### Kết hợp:\n- **Gateway**: Auth, rate limiting, SSL termination\n- **BFF**: Data aggregation, response shaping"
-    },
-    {
-      "id": 51,
-      "type": "article",
-      "title": "Phase 9: Circuit Breaker Pattern",
-      "emoji": "🔌",
-      "content": "### Khi downstream service down, đừng để cascade failure!\n\n```mermaid\nstateDiagram-v2\n    [*] --> Closed\n    Closed --> Open: Failures > threshold\n    Open --> HalfOpen: Timeout expired\n    HalfOpen --> Closed: Success\n    HalfOpen --> Open: Failure\n```\n\n| State | Behavior |\n|-------|----------|\n| **Closed** | Hoạt động bình thường |\n| **Open** | Fail fast, không gọi downstream |\n| **Half-Open** | Thử lại 1 request |\n\n### Ví dụ:\n\n```\n🛒 Order → 💳 Payment (down!)\n   ↓\n🔌 Circuit OPEN\n   ↓\n\"Payment unavailable, try later\"\n   (thay vì chờ timeout 30s mỗi request)\n```"
-    },
-    {
-      "id": 52,
-      "type": "article",
-      "title": "Phase 9: Cảnh báo!",
-      "emoji": "🚨",
-      "content": "### ⚠️ Microservices tăng complexity 10x!\n\n```mermaid\nflowchart LR\n    subgraph M[\"🏢 Monolith\"]\n        M1[\"1 Repo\"]\n        M2[\"1 Deploy\"]\n        M3[\"1 DB\"]\n    end\n    subgraph MS[\"🧩 Microservices\"]\n        MS1[\"N Repos\"]\n        MS2[\"N Deploys\"]\n        MS3[\"N DBs\"]\n        MS4[\"Service Mesh\"]\n        MS5[\"Distributed Tracing\"]\n    end\n    \n    style M fill:#bbf7d0,stroke:#22c55e\n    style MS fill:#fee2e2,stroke:#dc2626\n```\n\n> *\"You're not Netflix. I'm not Netflix.\"*\n\n### KHÔNG dùng nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ Team < 10 devs | Không đủ người |\n| ❌ Startup đầu | Cần ship nhanh |\n| ❌ Chưa có DevOps | K8s phức tạp |\n| ❌ Monolith chưa có vấn đề | Không cần thay đổi nếu chưa cần |"
-    },
-    {
-      "id": 53,
-      "type": "quiz",
-      "quizId": "q9",
-      "title": "🎯 Quiz: Microservices",
-      "question": "Order Service cần data từ User Service và Product Service. Cả 2 services đều down. Order Service nên làm gì?",
-      "options": [
-        "Crash luôn và báo lỗi 500",
-        "Cache data từ các services khác, dùng cached data khi downstream down",
-        "Chờ đến khi services khác up",
-        "Gọi trực tiếp vào database của User/Product Service"
-      ],
-      "correctOption": 1,
-      "timeLimit": 25,
-      "explanation": "Circuit breaker + caching! Microservices cần resilience: cache data cần thiết, graceful degradation khi downstream fail. Không bao giờ access DB của service khác trực tiếp!"
-    },
-    {
-      "id": 54,
-      "type": "quiz",
-      "quizId": "q10",
-      "title": "🎯 Final Quiz",
-      "question": "Startup 5 devs, MVP giai đoạn đầu, chưa có users. CTO muốn dùng K8s + microservices + Kafka từ ngày 1. Bạn sẽ nói gì?",
-      "options": [
-        "Đồng ý, chuẩn bị cho scale từ đầu là tốt",
-        "Phản đối, start với monolith đơn giản, thêm complexity khi cần",
-        "Đề xuất dùng serverless thay vì K8s",
-        "Đồng ý nhưng bỏ Kafka"
-      ],
-      "correctOption": 1,
-      "timeLimit": 25,
-      "explanation": "YAGNI! (You Aren't Gonna Need It). Startup cần ship nhanh, validate idea. Monolith đơn giản dễ develop/debug/deploy. Chỉ tách khi thực sự có vấn đề về scale. 90% companies không cần microservices!"
+      "content": "### Nếu app phát triển thực sự lớn...\n\nBạn có thể cân nhắc **Microservices** - tách monolith thành nhiều services độc lập, mỗi service có database riêng và scale riêng.\n\n```mermaid\nflowchart TB\n    GW[\"🚪 API Gateway\"] --> US[\"👤 User Service\"]\n    GW --> PS[\"📦 Product Service\"]\n    GW --> OS[\"🛒 Order Service\"]\n    GW --> PY[\"💳 Payment Service\"]\n    \n    US --> DB1[(\"DB\")]\n    PS --> DB2[(\"DB\")]\n    OS --> DB3[(\"DB\")]\n    PY --> DB4[(\"DB\")]\n```\n\n### ⚠️ Nhưng đây có thể là ý tưởng TỆ nếu:\n\n| Điều kiện | Lý do |\n|-----------|-------|\n| ❌ **Team nhỏ** | Không đủ người vận hành N services |\n| ❌ **Chưa có DevOps experience** | K8s, service mesh, distributed tracing rất phức tạp |\n| ❌ **Monolith chưa có vấn đề** | Đừng giải quyết vấn đề chưa tồn tại |\n| ❌ **Làm vì thấy Netflix làm** | Họ ở league khác, gặp vấn đề khác |\n\n> *\"You're not Netflix. I'm not Netflix. They play in a different league.\"*\n\n### Kết luận:\n\nMicroservices **KHÔNG** nằm trong scope của workshop này. Với đa số projects, **monolith được scale đúng cách** (Phase 0-8) là quá đủ.\n\n> 🎯 **Scale khi CẦN, không phải khi MUỐN.**"
     },
     {
       "id": 55,
@@ -533,7 +466,7 @@
         "⚡ Phase 6: Caching giảm DB load",
         "🌍 Phase 7: CDN cho static assets",
         "🗃️ Phase 8: Replication + Sharding + CAP Theorem",
-        "🧩 Phase 9: Microservices + Circuit Breaker + BFF"
+        "🧩 Phase 9: Microservices (khi thực sự cần)"
       ]
     },
     {
@@ -607,20 +540,6 @@
       "options": ["AP - user cần checkout được, tồn kho sai vài cái không sao", "CP - phải đảm bảo tồn kho chính xác, chấp nhận timeout/error", "Không cần chọn, dùng cache là xong", "AP cho read, CP cho write"],
       "correctOption": 1,
       "timeLimit": 20
-    },
-    {
-      "slideId": 53,
-      "question": "Order Service cần data từ User Service và Product Service. Cả 2 services đều down. Order Service nên làm gì?",
-      "options": ["Crash luôn và báo lỗi 500", "Cache data từ các services khác, dùng cached data khi downstream down", "Chờ đến khi services khác up", "Gọi trực tiếp vào database của User/Product Service"],
-      "correctOption": 1,
-      "timeLimit": 25
-    },
-    {
-      "slideId": 54,
-      "question": "Startup 5 devs, MVP giai đoạn đầu, chưa có users. CTO muốn dùng K8s + microservices + Kafka từ ngày 1. Bạn sẽ nói gì?",
-      "options": ["Đồng ý, chuẩn bị cho scale từ đầu là tốt", "Phản đối, start với monolith đơn giản, thêm complexity khi cần", "Đề xuất dùng serverless thay vì K8s", "Đồng ý nhưng bỏ Kafka"],
-      "correctOption": 1,
-      "timeLimit": 25
     }
   ]
 }
